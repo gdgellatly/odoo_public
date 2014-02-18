@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data noupdate="1">
+
+        <record model="account.account.type" id="account_type_other_income">
+          <field name="name">Income</field>
+          <field name="code">other_income</field>
+          <field name="close_method">none</field>
+          <field name="report_type">other_income</field>
+        </record>
+        <record model="account.account.type" id="account_type_other_expense">
+            <field name="name">Other Expense</field>
+            <field name="code">other_expense</field>
+            <field name="close_method">none</field>
+            <field name="report_type">other_expense</field>
+        </record>
+        <record model="account.account.type" id="account_type_cogs">
+          <field name="name">Cost of Goods Sold</field>
+          <field name="code">cogs</field>
+          <field name="close_method">none</field>
+          <field name="report_type">cogs</field>
+        </record>
+        <record model="account.account.type" id="account_type_cogs_view">
+            <field name="name">COGS View</field>
+            <field name="code">view</field>
+            <field name="report_type">cogs</field>
+        </record>        
+        <record model="account.account.type" id="account_type_other_income_view">
+            <field name="name">Other Income View</field>
+            <field name="code">view</field>
+            <field name="report_type">other_income</field>
+        </record>
+        <record model="account.account.type" id="account_type_other_expense_view">
+            <field name="name">Other Expense View</field>
+            <field name="code">expense</field>
+            <field name="report_type">other_expense</field>
+        </record>
+        <record model="account.account.type" id="account.conf_account_type_equity">
+          <field name="name">Equity</field>
+          <field name="code">equity</field>
+          <field name="close_method">balance</field>
+          <field name="report_type">equity</field>
+        </record>
+        <record model="account.account.type" id="account_type_equity_view">
+          <field name="name">Equity View</field>
+          <field name="code">equity</field>
+          <field name="report_type">equity</field>
+        </record>
+        <record model="account.account.type" id="account_type_tax_view">
+          <field name="name">Taxation View</field>
+          <field name="code">tax</field>
+          <field name="report_type">tax_expense</field>
+        </record>
+        <record model="account.account.type" id="account_type_tax">
+          <field name="name">Taxation</field>
+          <field name="code">tax</field>
+          <field name="close_method">none</field>
+          <field name="report_type">tax_expense</field>
+        </record>
+        <record model="account.account.type" id="account_type_depn_view">
+          <field name="name">Depreciation View</field>
+          <field name="code">depn</field>
+          <field name="report_type">depn_expense</field>
+        </record>
+        <record model="account.account.type" id="account_type_depn">
+          <field name="name">Depreciation</field>
+          <field name="code">depn</field>
+          <field name="close_method">none</field>
+          <field name="report_type">depn_expense</field>
+        </record>
+        <record model="account.account.type" id="account_type_interest_view">
+          <field name="name">Interest View</field>
+          <field name="code">interest</field>
+          <field name="report_type">interest_expense</field>
+        </record>
+        <record model="account.account.type" id="account_type_interest">
+          <field name="name">Interest</field>
+          <field name="code">interest</field>
+          <field name="close_method">none</field>
+          <field name="report_type">interest_expense</field>
+        </record>
+    </data>
+</openerp>
+

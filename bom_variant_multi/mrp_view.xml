@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <!-- Bill of Materials -->
+
+        <record id="mrp_bom_form_view" model="ir.ui.view">
+            <field name="name">mrp.bom.form</field>
+            <field name="model">mrp.bom</field>
+            <field name="inherit_id" ref="mrp.mrp_bom_form_view" />
+            <field name="priority">2</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='product_id']" position="replace">
+                    <field name="product_id" on_change="onchange_product_id(product_id, name, bom_template)"/>
+                    <field name="bom_template" on_change="onchange_product_id(product_id, name, bom_template)"/>
+                </xpath>
+                <xpath expr="//field[@name='bom_lines']//tree[@string='Components']" position="replace"
+                    >
+                    <tree string="Components" editable="bottom">
+                        <field name="product_id" on_change="onchange_product_id(product_id, name, bom_template)"/>
+                        <field name="bom_template" on_change="onchange_product_id(product_id, name, bom_template)"/>
+                        <field name="product_qty" />
+                        <field name="product_uom" string="UoM" />
+                        <field name="dimension_map_ids" widget="many2many_tags" attrs="{'invisible': [('bom_template',
+                            '=', False)]}"/>
+                        <field name="adj_weight" />
+                        <field name="match_condition" colspan="4" />
+                        <field name="date_start" invisible="1" />
+                        <field name="name" invisible="1" />
+                        <field name="date_stop" invisible="1"/>
+                    </tree>
+                </xpath>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="dimension_map_tree_view">
+            <field name="name">bom.dimension_map.tree</field>
+            <field name="model">bom.dimension_map</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="Dimension Match">
+                    <field name="name" />
+                    <field name="mapping_type" />
+                    <field name="base_dimension_type" />
+                    <field name="mapped_dimension_type" />
+                    <field name="match_opt_condition" />
+                </tree>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="dimension_map_form_view">
+            <field name="name">bom.dimension_map.form</field>
+            <field name="model">bom.dimension_map</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Dimension Match">
+                    <field name="name" />
+                    <field name="mapping_type" />
+                    <field name="base_dimension_type" />
+                    <field name="mapped_dimension_type" attrs="{'invisible': [('mapping_type', '=', 'one2one')],
+                        'required': [('mapping_type', '=', 'one2diff')]}" />
+                    <field name="match_opt_condition" attrs="{'invisible': [('mapping_type', '=', 'one2one')],
+                        'required': [('mapping_type', '=', 'one2diff')]}" />
+                </form>
+            </field>
+        </record>
+
+        <record id="dimension_map_action" model="ir.actions.act_window">
+            <field name="name">Dimension Maps</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">bom.dimension_map</field>
+            <field name="view_type">form</field>
+            <field name="view_id" ref="dimension_map_tree_view"/>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to add a dimension map.
+              </p><p>
+                Dimension Maps allow you to create and manage manufacturing
+                maps to choose templates based on rules.
+              </p>
+            </field>
+        </record>
+
+        <menuitem action="dimension_map_action" id="menu_view_dimension_map_mrp" parent="mrp.menu_mrp_configuration" sequence="40"/>
+
+        <record id="mrp_production_form_view" model="ir.ui.view">
+            <field name="name">mrp.production.form</field>
+            <field name="model">mrp.production</field>
+            <field name="inherit_id" ref="mrp.mrp_production_form_view" />
+            <field name="arch" type="xml">
+                <xpath expr="/form//field[@name='product_id'][@on_change='product_id_change(product_id)']" position="attributes" >
+                    <attribute name="domain">[('has_bom','=',True)]</attribute>
+                    <attribute name="context"></attribute>
+                </xpath>
+                <xpath expr="/form//field[@name='bom_id']" position="attributes" >
+                    <attribute name="domain">['|',('product_id.has_bom','=',True),('product_id','=',product_id)]</attribute>
+                    <attribute name="context"></attribute>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</openerp>
