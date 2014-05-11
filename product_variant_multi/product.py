@@ -36,6 +36,7 @@ from openerp.tools.translate import _
 import re
 
 import logging
+
 _logger = logging.getLogger(__name__)
 
 
@@ -55,7 +56,7 @@ class ProductProduct(orm.Model):
             code = d.get('default_code', False)
             if code:
                 name = '[%s] %s' % (code, name)
-            return (d['id'], name)
+            return d['id'], name
 
         partner_id = context.get('partner_id', False)
 
@@ -65,19 +66,19 @@ class ProductProduct(orm.Model):
             if sellers:
                 for s in sellers:
                     mydict = {
-                              'id': product.id,
-                              'name': s.product_name or product.name,
-                              'default_code': s.product_code or product.default_code,
-                              'variants': product.variants
-                              }
+                        'id': product.id,
+                        'name': s.product_name or product.name,
+                        'default_code': s.product_code or product.default_code,
+                        'variants': product.variants
+                    }
                     result.append(_name_get(mydict))
             else:
                 mydict = {
-                          'id': product.id,
-                          'name': product.name,
-                          'default_code': product.default_code,
-                          'variants': product.variants
-                          }
+                    'id': product.id,
+                    'name': product.name,
+                    'default_code': product.default_code,
+                    'variants': product.variants
+                }
                 result.append(_name_get(mydict))
         return result
 
@@ -96,10 +97,10 @@ class ProductProduct(orm.Model):
                     args.remove(arg)
             args = args + args2
         return super(ProductProduct, self).search(cr, user, args,
-                                                   offset=offset, limit=limit,
-                                                   order=order,
-                                                   context=context,
-                                                   count=count)
+                                                  offset=offset, limit=limit,
+                                                  order=order,
+                                                  context=context,
+                                                  count=count)
 
     def name_search(self, cr, user, name='', args=None, operator='ilike',
                     context=None, limit=100):
@@ -127,32 +128,34 @@ class ProductProduct(orm.Model):
                 res = ptrn.search(name)
                 if res:
                     ids = self.search(
-                                cr, user,
-                                [('default_code', '=', res.group(2))] + args,
-                                limit=limit, context=context
-                                )
+                        cr, user,
+                        [('default_code', '=', res.group(2))] + args,
+                        limit=limit, context=context
+                    )
         else:
             ids = self.search(cr, user, args, limit=limit, context=context)
         result = self.name_get(cr, user, ids, context=context)
         return result
 
     #variant update functions
-    def simple_build_product_name(self, cr, uid, products, vals, context=None):
+    @staticmethod
+    def simple_build_product_name(products, vals):
         vals[0].append('name')
         tmpl_name = products[0].product_tmpl_id.name or ''
         [v.append('%s %s' % (str(tmpl_name),
                              str(v[vals[0].index('variants')]))) for
-                                                k, v in vals[1].items()]
+         k, v in vals[1].items()]
         return vals
 
     def build_product_name(self, cr, uid, ids, context=None):
-        return self.build_product_field(cr, uid, ids, 'name', context=None)
+        return self.build_product_field(cr, uid, ids, 'name', context=context)
 
     def build_product_field(self, cr, uid, ids, field, context=None):
 
-        def get_name(product):
-            return ((product.product_tmpl_id.name or '') +
-                    ' ' + (product.variants or ''))
+        # noinspection PyUnusedLocal
+        def get_name(prod):
+            return ((prod.product_tmpl_id.name or '') +
+                    ' ' + (prod.variants or ''))
 
         if not context:
             context = {}
@@ -173,6 +176,7 @@ class ProductProduct(orm.Model):
                     product.write({field: new_field_value}, context=context)
         return True
 
+    # noinspection PyMethodMayBeStatic,PyUnusedLocal
     def parse(self, cr, uid, o, text, context=None):
         if not text:
             return ''
@@ -181,7 +185,7 @@ class ProductProduct(orm.Model):
         for val in vals:
             if '_]' in val:
                 sub_val = val.split('_]')
-                description.extend([(safe_eval(sub_val[0], {'o' :o, 'context':context}) or ''),
+                description.extend([(safe_eval(sub_val[0], {'o': o, 'context': context}) or ''),
                                     sub_val[1]])
 
             else:
@@ -189,7 +193,7 @@ class ProductProduct(orm.Model):
         return ''.join(description)
 
     def generate_product_code(self, cr, uid, product_obj, code_generator, context=None):
-        '''I wrote this stupid function to be able to inherit it in a custom module !'''
+        """I wrote this stupid function to be able to inherit it in a custom module !"""
         return self.parse(cr, uid, product_obj, code_generator, context=context)
 
     def build_product_code_and_properties(self, cr, uid, products, vals,
@@ -202,7 +206,7 @@ class ProductProduct(orm.Model):
             new_values = [tmpl.variant_track_production,
                           tmpl.variant_track_outgoing,
                           tmpl.variant_track_incoming]
-        parsed_code_gen = False
+
         #  This regex searches for occurrences of [_o.field_] or [_o.field[n:m]_]
         #  where field is in calculated columns and [n:m] is standard slice
         #  syntax - e.g. TR[_o.variant_code[0]_].40[_o.variant_code[1:]_]DUR
@@ -222,44 +226,46 @@ class ProductProduct(orm.Model):
                 if r[2]:
                     repl_string = eval("repl_string" + r[2])
                 parsed_code_gen = parsed_code_gen.replace(r[0], repl_string)
+            # noinspection PyUnboundLocalVariable
             vals[1][product.id].extend(new_values)
             vals[1][product.id].append(self.generate_product_code(
-                                                        cr, uid, product,
-                                                        parsed_code_gen,
-                                                        context=context))
+                cr, uid, product,
+                parsed_code_gen,
+                context=context))
         return vals
 
+    # noinspection PyMethodMayBeStatic,PyUnusedLocal
     def product_ids_variant_changed(self, cr, uid, ids, res, context=None):
-        '''it's a hook for product_variant_multi advanced'''
+        """it's a hook for product_variant_multi advanced"""
         return True
 
-    def generate_variant_code(self, cr, uid, product, context=None):
-        r = [(dim.dimension_id.sequence, (dim.option_id.code or '')) for dim in
-                            product.dimension_value_ids]
+    @staticmethod
+    def generate_variant_code(product):
+        r = [(dim.dimension_id.sequence, (dim.option_id.code or '')) for
+             dim in product.dimension_value_ids]
         r.sort()
         r = [x[1] for x in r]
         return ''.join(r)
 
+    # noinspection PyUnusedLocal
     def build_variants_code(self, cr, uid, products, vals, context=None):
         vals[0].append('variant_code')
-        [vals[1][product.id].append(self.generate_variant_code(
-                                            cr, uid, product, context=context
-                                            )) for product in products]
+        [vals[1][product.id].append(self.generate_variant_code(product)) for product in products]
         return vals
 
     def generate_variant_name(self, cr, uid, product, model, separator='',
                               context=None):
-        '''
+        """
         Do the generation of the variant name in a
         dedicated function, so that we can
         inherit this function to hack the code generation
-        '''
+        """
         if not model:
             model = product.variant_model_name
         # adds 100 records or so per minute to speed
         p = self.parse
         r = [(dim.dimension_id.sequence, p(cr, uid, dim, model,
-                                              context=context)) for dim in product.dimension_value_ids]
+                                           context=context)) for dim in product.dimension_value_ids]
         r.sort()
         r = [x[1] for x in r]
         return separator.join(r)
@@ -274,13 +280,13 @@ class ProductProduct(orm.Model):
         gvn = self.generate_variant_name
         vals[0].extend(['id', 'variants'])
         [vals[1][product.id].extend([product.id,
-                                    gvn(cr, uid, product, model, sep,
-                                        context=context)])
-                                                    for product in products]
+                                     gvn(cr, uid, product, model, sep,
+                                         context=context)])
+         for product in products]
         return vals
 
-    def update_variant_price_and_weight(self, cr, uid, products, vals,
-                                        context=None):
+    # noinspection PyMethodMayBeStatic,PyUnusedLocal
+    def update_variant_price_and_weight(self, cr, uid, products, vals, context=None):
         vals[0].extend(['cost_price_extra', 'price_extra',
                         'weight', 'weight_net'])
         tmpl = products[0].product_tmpl_id
@@ -300,7 +306,7 @@ class ProductProduct(orm.Model):
                                         tmpl_weight_net + weight_extra])
         return vals
 
-# End variant update functions
+    # End variant update functions
 
     def _check_dimension_values(self, cr, uid, ids):
         # TODO: check that all dimension_types of the product_template have a corresponding dimension_value ??
@@ -316,24 +322,25 @@ class ProductProduct(orm.Model):
                                        " type.") % product.name)
         return True
 
+    # TODO: Check if these 2 functions are even used anywhere anymore
     def compute_product_dimension_extra_price(
-                    self, cr, uid, product_id, product_price_extra=0.0,
-                    dim_price_margin=1.0,dim_price_extra=0.0, context=None
-                    ):
+            self, cr, uid, product_id, product_price_extra=0.0,
+            dim_price_margin=1.0, dim_price_extra=0.0, context=None
+    ):
         if context is None:
             context = {}
         dimension_extra = 0.0
         product = self.browse(cr, uid, product_id, context=context)
         for dim in product.dimension_value_ids:
             dimension_extra += (product.product_price_extra *
-                                    dim.dim_price_margin +
-                                    dim.dim_price_extra)
+                                dim.dim_price_margin +
+                                dim.dim_price_extra)
 
         if 'uom' in context:
             product_uom_obj = self.pool['product.uom']
             uom = product.uos_id or product.uom_id
             dimension_extra = product_uom_obj._compute_price(cr, uid,
-                uom.id, dimension_extra, context['uom'])
+                                                             uom.id, dimension_extra, context['uom'])
         return dimension_extra
 
     def compute_dimension_extra_price(self, cr, uid, ids, result,
@@ -344,12 +351,12 @@ class ProductProduct(orm.Model):
             context = {}
         for product in self.browse(cr, uid, ids, context=context):
             dimension_extra = self.compute_product_dimension_extra_price(
-                                    cr, uid, product.id,
-                                    product_price_extra=product_price_extra,
-                                    dim_price_margin=dim_price_margin,
-                                    dim_price_extra=dim_price_extra,
-                                    context=context
-                                    )
+                cr, uid, product.id,
+                product_price_extra=product_price_extra,
+                dim_price_margin=dim_price_margin,
+                dim_price_extra=dim_price_extra,
+                context=context
+            )
             result[product.id] += dimension_extra
         return result
 
@@ -367,11 +374,13 @@ class ProductProduct(orm.Model):
         context['unlink_from_product_product'] = True
         return super(ProductProduct, self).unlink(cr, uid, ids, context)
 
+    # noinspection PyUnusedLocal
     def _product_partner_ref(self, cr, uid, ids, name, arg, context=None):
         res = {}
         if context is None:
             context = {}
         for p in self.browse(cr, uid, ids, context=context):
+            # noinspection PyUnresolvedReferences
             data = self._get_partner_code_name(cr, uid, [], p,
                                                context.get('partner_id', None),
                                                context=context)
@@ -385,12 +394,14 @@ class ProductProduct(orm.Model):
                          (data['name'] or ''))
         return res
 
+    # noinspection PyUnusedLocal
     def _product_cost_price(self, cr, uid, ids, name, arg, context=None):
         """
         Because some functions do not use price get and access standard
         price directly we modify those functions to refer to cost price
         which calls price_get
         """
+        # noinspection PyUnresolvedReferences
         return self.price_get(cr, uid, ids, ptype='standard_price',
                               context=context)
 
@@ -398,37 +409,37 @@ class ProductProduct(orm.Model):
         'name': fields.char('Name', size=128, translate=True),
         'variants': fields.char('Variants', size=128),
         'dimension_value_ids': fields.many2many(
-                'product.variant.dimension.value',
-                'product_product_dimension_rel',
-                'product_id', 'dimension_id',
-                'Dimensions',
-                domain="[('product_tmpl_id','=',product_tmpl_id)]"
-                ),
+            'product.variant.dimension.value',
+            'product_product_dimension_rel',
+            'product_id', 'dimension_id',
+            'Dimensions',
+            domain="[('product_tmpl_id','=',product_tmpl_id)]"
+        ),
         'cost_price_extra': fields.float(
-                'Purchase Extra Cost',
-                digits_compute=dp.get_precision('Product Price')
-                ),
+            'Purchase Extra Cost',
+            digits_compute=dp.get_precision('Product Price')
+        ),
         'volume': fields.float('Volume', help="The volume in m3."),
         'weight': fields.float(
-                'Gross weight',
-                digits_compute=dp.get_precision('Stock Weight'),
-                help="The gross weight in Kg."
-                ),
+            'Gross weight',
+            digits_compute=dp.get_precision('Stock Weight'),
+            help="The gross weight in Kg."
+        ),
         'weight_net': fields.float(
-                'Net weight',
-                digits_compute=dp.get_precision('Stock Weight'),
-                help="The net weight in Kg."
-                ),
+            'Net weight',
+            digits_compute=dp.get_precision('Stock Weight'),
+            help="The net weight in Kg."
+        ),
         'variant_code': fields.char('Variant Code', size=32),
         'partner_ref': fields.function(
-               _product_partner_ref, type='char',
-               string='Customer ref'
-               ),
+            _product_partner_ref, type='char',
+            string='Customer ref'
+        ),
         'cost_price': fields.function(
-                _product_cost_price, type='float',
-                string='Cost Price',
-                digits_compute=dp.get_precision('Product Price'),
-                )
+            _product_cost_price, type='float',
+            string='Cost Price',
+            digits_compute=dp.get_precision('Product Price'),
+        )
     }
 
     _constraints = [

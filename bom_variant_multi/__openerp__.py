@@ -18,6 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
+# noinspection PyStatementEffect,PyPep8
 {
     'name': 'MRP Bill of Material Templates',
     'version': '1.2',

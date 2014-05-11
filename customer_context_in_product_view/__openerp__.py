@@ -19,6 +19,7 @@
 #
 ##############################################################################
 
+# noinspection PyStatementEffect
 {
     'name': 'Display Customer Price in Product View',
     'version': '1.1',

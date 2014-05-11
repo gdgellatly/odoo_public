@@ -19,12 +19,13 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
+# noinspection PyStatementEffect
 {
-    "name" : "Products with multi-level variants",
-    "version" : "1.0",
-    "author" : "Tiny, Akretion, Graeme Gellatly",
-    "category" : "Generic Modules/Inventory Control",
-    "description":"""
+    'name': 'Products with multi-level variants',
+    'version': '1.0',
+    'author': 'Tiny, Akretion, Graeme Gellatly',
+    'category': 'Generic Modules/Inventory Control',
+    'description': '''
 
     This is a very advanced version of product_variant_multi and should only be used after
     very thorough testing by experienced OpenERP developers.  It overcomes a number of issues
@@ -65,15 +66,15 @@ will have been warned.
 
 The dependence to the stock module is weak, it's only there to be able
 enable tracking production lots.
-    """,
-    "depends" : ["product", "stock"],
-    "demo_xml" : ["demo_data.xml"],
-    "data" : [
-        "security/ir.model.access.csv",
-        "product_view.xml",
+    ''',
+    'depends': ['product', 'stock'],
+    'demo_xml': ['demo_data.xml'],
+    'data': [
+        'security/ir.model.access.csv',
+        'product_view.xml',
     ],
-    "application": True,
-    "active": False,
-    "installable": True
+    'application': True,
+    'active': False,
+    'installable': True
 }
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

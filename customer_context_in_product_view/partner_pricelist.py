@@ -18,24 +18,24 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-'''This module allows products view to lookup price by customer (as opposed
-to default from pricelist)'''
+"""This module allows products view to lookup price by customer (as opposed
+to default from pricelist)"""
 
 from openerp.osv import orm, fields
 
 
 class ProductProduct(orm.Model):
-    '''
+    """
     inherited product.product to add customer field
     and amend search functions
-    '''
+    """
     _inherit = 'product.product'
 
     _columns = {
         'customer_context_id': fields.dummy(
-                        string='Customer', relation='res.partner',
-                        type='many2one', domain=[('customer', '=', True)]),
-        }
+            string='Customer', relation='res.partner',
+            type='many2one', domain=[('customer', '=', True)]),
+    }
 
 
 class ProductPricelist(orm.Model):
@@ -53,6 +53,6 @@ class ProductPricelist(orm.Model):
             return [(context['pricelist'], pricelist.name)]
         else:
             return super(ProductPricelist, self).name_search(
-                                            cr, user, name=name, args=args,
-                                            operator=operator, context=context,
-                                            limit=limit)
+                cr, user, name=name, args=args,
+                operator=operator, context=context,
+                limit=limit)

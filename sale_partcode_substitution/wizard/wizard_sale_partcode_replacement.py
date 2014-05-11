@@ -35,7 +35,7 @@ class SaleCodeReplacement(orm.TransientModel):
     _defaults = {
         'from_code': '???',
         'to_code': '???',
-        }
+    }
 
     def change_products_partcode(self, cr, uid, ids, context=None):
 
@@ -43,7 +43,7 @@ class SaleCodeReplacement(orm.TransientModel):
         prod_pool = self.pool['product.product']
 
         sale_obj = self.pool['sale.order'].browse(cr, uid, context['active_id'],
-                                          context=context)
+                                                  context=context)
 
         obj_curr = self.browse(cr, uid, ids, context)[0]
         from_code = obj_curr.from_code
@@ -61,28 +61,28 @@ class SaleCodeReplacement(orm.TransientModel):
                     if old_part.find(from_code) != -1:
                         new_part = old_part.replace(from_code, to_code)
                         new_part_id = prod_pool.search(
-                                            cr, uid,
-                                            [('default_code', '=', new_part)]
-                                            )
+                            cr, uid,
+                            [('default_code', '=', new_part)]
+                        )
                         if new_part_id:
                             new_part_id = new_part_id[0]
                             line.write({'product_id': new_part_id})
                             vals = order_line_pool.product_id_change(
-                                                    cr, uid, line.id,
-                                                    pricelist_id, new_part_id,
-                                                    qty=line.product_uom_qty,
-                                                    uom=line.product_uom.id,
-                                                    uos=line.product_uos.id,
-                                                    partner_id=partner_id,
-                                                    date_order=date_order,
-                                                    update_tax=True,
-                                                    context=context)
+                                cr, uid, line.id,
+                                pricelist_id, new_part_id,
+                                qty=line.product_uom_qty,
+                                uom=line.product_uom.id,
+                                uos=line.product_uos.id,
+                                partner_id=partner_id,
+                                date_order=date_order,
+                                update_tax=True,
+                                context=context)
                             if vals.get('value', False):
                                 taxes = vals['value'].get('tax_id', False)
                                 if taxes:
                                     vals['value'].update(
-                                                {'tax_id': [(6, 0, taxes)]}
-                                                )
+                                        {'tax_id': [(6, 0, taxes)]}
+                                    )
                                 line.write(vals['value'])
         else:
             raise orm.except_orm(_('Warning'),

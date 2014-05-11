@@ -18,18 +18,20 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-'''bom_variant_multi Openerp Module'''
+"""bom_variant_multi Openerp Module"""
 
 from openerp.osv import orm, fields
 from openerp.tools.translate import _
 
 import logging
+
 _logger = logging.getLogger(__name__)
 
 
 class ProductProduct(orm.Model):
     _inherit = 'product.product'
 
+    # noinspection PyUnusedLocal
     def _has_bom(self, cr, uid, ids, name, arg, context=None):
         prod_obj = self.pool['product.product']
         bom_obj = self.pool['mrp.bom']
@@ -40,8 +42,8 @@ class ProductProduct(orm.Model):
                                            ('bom_ids', '!=', False),
                                            ('bom_ids.bom_id', '=', False)])
             if product_ids and (product.id in product_ids or
-                        bom_obj.search(cr, uid, [('product_id', 'in', product_ids),
-                                                 ('bom_template', '=', True)])):
+                                bom_obj.search(cr, uid, [('product_id', 'in', product_ids),
+                                                         ('bom_template', '=', True)])):
                 res[product.id] = True
         return res
 
@@ -50,72 +52,71 @@ class ProductProduct(orm.Model):
         bom_obj = self.pool['mrp.bom']
         for bom in bom_obj.browse(cr, uid, ids, context=context):
             res.extend([x.id for x in
-                                bom.product_id.product_tmpl_id.product_ids])
+                        bom.product_id.product_tmpl_id.variant_ids])
         return res
 
     _columns = {'has_bom': fields.function(
-                        _has_bom, type='boolean', string='Has Bom',
-                        store={'mrp.bom': (_get_product_ids,
-                                           ['product_id', 'bom_template'], 10)
-                               }
-                        )
-                }
+        _has_bom, type='boolean', string='Has Bom',
+        store={'mrp.bom': (_get_product_ids,
+                           ['product_id', 'bom_template'], 10)
+               }
+    )}
 
 
 class BomDimensionMap(orm.Model):
-    'BoM Template Variant Dimension Match'
+    """BoM Template Variant Dimension Match"""
     _name = 'bom.dimension_map'
     _description = __doc__
 
     _columns = {
         'name': fields.char('Name', size=64),
         'mapping_type': fields.selection(
-                        [('one2one', 'Same Variants One -> One'),
-                         ('one2diff', 'Different Variants - One -> One Mapping')],
-                        'Mapping Type', required=True
-                        ),
+            [('one2one', 'Same Variants One -> One'),
+             ('one2diff', 'Different Variants - One -> One Mapping')],
+            'Mapping Type', required=True
+        ),
         'bom_tmpl_id': fields.many2many(
-                        'mrp.bom', 'dim_map_mrp_bom_rel', 'dimension_map_id',
-                        'bom_tmpl_id', 'BoM Templates'
-                        ),
+            'mrp.bom', 'dim_map_mrp_bom_rel', 'dimension_map_id',
+            'bom_tmpl_id', 'BoM Templates'
+        ),
         'base_dimension_type': fields.many2one(
-                        'product.variant.dimension.type',
-                        'Base Dimension Type', required=True
-                        ),
+            'product.variant.dimension.type',
+            'Base Dimension Type', required=True
+        ),
         'mapped_dimension_type': fields.many2one(
-                        'product.variant.dimension.type',
-                        'Mapped Dimension Type'
-                        ),
+            'product.variant.dimension.type',
+            'Mapped Dimension Type'
+        ),
         'match_opt_condition': fields.char(
-                        'Match Condition', size=256,
-                        help='Domain Expression to select which product should'
-                             ' be used, expressed on the product option \n'
-                             'The base variable is available which is the '
-                             'selected products dimension option'
-                             'e.g. [("name", "=", base.name)]'
-                        ),
-        }
+            'Match Condition', size=256,
+            help='Domain Expression to select which product should'
+                 ' be used, expressed on the product option \n'
+                 'The base variable is available which is the '
+                 'selected products dimension option'
+                 'e.g. [("name", "=", base.name)]'
+        ),
+    }
 
 
 class BomTemplate(orm.Model):
-    '''Implements BOM Template'''
+    """Implements BOM Template"""
     _inherit = 'mrp.bom'
 
     _columns = {
         'bom_template': fields.boolean(
-                           'Use as Template', track_visibility='onchange',
-                           help="If this field is set to True it matches "
-                                "for all products sharing the same template"),
+            'Use as Template', track_visibility='onchange',
+            help="If this field is set to True it matches "
+                 "for all products sharing the same template"),
         'dimension_map_ids': fields.many2many(
-                          'bom.dimension_map', 'dim_map_mrp_bom_rel',
-                          'bom_tmpl_id', 'dimension_map_id',
-                          'BoM Variant Dimensions Match'),
+            'bom.dimension_map', 'dim_map_mrp_bom_rel',
+            'bom_tmpl_id', 'dimension_map_id',
+            'BoM Variant Dimensions Match'),
         'match_condition': fields.char(
-                           'Match Condition', size=256,
-                           help='Domain Expression if this product should be used, '
-                                'expressed on the product object'
-                                'e.g. [("name", "ilike", "frilly"), '
-                                      '("name", "ilike", "DD")]'),
+            'Match Condition', size=256,
+            help='Domain Expression if this product should be used, '
+                 'expressed on the product object'
+                 'e.g. [("name", "ilike", "frilly"), '
+                 '("name", "ilike", "DD")]'),
         'adj_weight': fields.boolean('Use weight'),
         'company_id': fields.many2one('res.company', 'Company', required=False),
 
@@ -130,25 +131,25 @@ class BomTemplate(orm.Model):
         @return:  Dictionary of changed values
         """
         res = super(BomTemplate, self).onchange_product_id(
-                                                cr, uid, ids,
-                                                product_id, name,
-                                                context=context)
+            cr, uid, ids,
+            product_id, name,
+            context=context)
 
         if (bom_template and res and 'value' in res and
-                            res['value'].get('name', False)):
+                res['value'].get('name', False)):
             if product_id:
                 prod = self.pool['product.product'].browse(cr, uid, product_id,
                                                            context=context)
                 res['value']['name'] = '%s %s' % (prod.product_tmpl_id.name,
-                                              _('TEMPLATE'))
+                                                  _('TEMPLATE'))
                 message = (_('By selecting to use this product as a template'
-                            ' all products of template %s will use this BoM') %
-                            prod.product_tmpl_id.name)
+                             ' all products of template %s will use this BoM') %
+                           prod.product_tmpl_id.name)
                 if res.get('warning', False):
                     res['warning'].update({'title': _('Multiple Warnings'),
                                            'message': '%s\n%s' %
-                                            (res['warning']['message'],
-                                             message)})
+                                                      (res['warning']['message'],
+                                                       message)})
                 else:
                     res['warning'] = {'title': 'Set as Template',
                                       'message': message}
@@ -156,9 +157,9 @@ class BomTemplate(orm.Model):
 
     def search(self, cr, user, args, offset=0, limit=None, order=None,
                context=None, count=False):
-        '''
+        """
         Override product searches to return templates as well.
-        '''
+        """
         prod_obj = self.pool['product.product']
         op_map = {'=': 'in', '!=': 'not in', '<>': 'not in',
                   'in': 'in', 'not in': 'not in'}
@@ -173,20 +174,20 @@ class BomTemplate(orm.Model):
                                                ('is_multi_variants', '=', True)],
                                               context=context)
                 tmpl_ids = [prod.product_tmpl_id.id for prod in
-                                    prod_obj.browse(cr, user, product_ids,
-                                                    context=context)]
+                            prod_obj.browse(cr, user, product_ids,
+                                            context=context)]
                 if tmpl_ids:
                     prod_ids = prod_obj.search(cr, user,
                                                [('product_tmpl_id', 'in',
                                                  tmpl_ids)])
                     operator = op_map.get(arg[1], 'in')
-                    if idx > 0 and args2[idx-1] == '!':
+                    if idx > 0 and args2[idx - 1] == '!':
                         operator = operator == 'in' and 'not in' or 'in'
                     extra_args = ['|', '&',
                                   ('bom_template', '=', True),
                                   ('product_id', operator, prod_ids)]
-                    args = (args[:idx+arg_offset] + extra_args +
-                            args[idx+arg_offset:])
+                    args = (args[:idx + arg_offset] + extra_args +
+                            args[idx + arg_offset:])
                     arg_offset += len(extra_args)
         try:
             res = super(BomTemplate, self).search(cr, user, args, offset=offset,
@@ -223,45 +224,48 @@ class BomTemplate(orm.Model):
             product = bom.product_id
 
         if bom.match_condition and product.id not in prod_obj.search(
-                                            cr, uid, eval(bom.match_condition)):
-            return ([], [])
+                cr, uid, eval(bom.match_condition)):
+            return [], []
         if bom.adj_weight:
             factor = product.weight or 1.0 * factor
 
         if bom.bom_template and addthis:
-            def _find_candidates(candidates, option):
+            def _find_candidates(products, option):
                 cr.execute(
-                            'select pp.product_id from product_product_dimension_rel as pp '
-                            'left join product_variant_dimension_value as dv '
-                            'on pp.dimension_id=dv.id '
-                            'where pp.product_id in %s and dv.option_id = %s',
-                            (tuple(candidates), option))
-                return (x[0] for x in cr.fetchall())
+                    'select pp.product_id from product_product_dimension_rel as pp '
+                    'left join product_variant_dimension_value as dv '
+                    'on pp.dimension_id=dv.id '
+                    'where pp.product_id in %s and dv.option_id = %s',
+                    (tuple(products), option))
+                return (y[0] for y in cr.fetchall())
 
             orig_variant_option_ids = [x.option_id.id for x in
-                                            product.dimension_value_ids]
+                                       product.dimension_value_ids]
             candidates = set(prod_obj.search(
-                            cr, uid,
-                            [('product_tmpl_id', '=',
-                                    bom.product_id.product_tmpl_id.id)]))
+                cr, uid,
+                [('product_tmpl_id', '=',
+                  bom.product_id.product_tmpl_id.id)]))
             dim_option_obj = self.pool['product.variant.dimension.option']
             dim_type_obj = self.pool['product.variant.dimension.type']
             for dim_map in bom.dimension_map_ids:
 
                 #Find the option used
                 base_option = dim_option_obj.search(cr, uid, [
-                                            ('dimension_id', '=', dim_map.base_dimension_type.id),
-                                            ('id', 'in', orig_variant_option_ids)
-                                            ])
+                    ('dimension_id', '=', dim_map.base_dimension_type.id),
+                    ('id', 'in', orig_variant_option_ids)
+                ])
                 if dim_map.mapping_type == 'one2one':
                     search_option_id = base_option
 
                 elif dim_map.mapping_type == 'one2diff':
+                    # noinspection PyUnusedLocal
                     base = dim_option_obj.browse(cr, uid, base_option)
                     search_option_id = dim_option_obj.search(
-                                cr, uid, eval(dim_map.match_opt_condition) +
-                                [('dimension_id', '=', dim_map.mapped_dimension_type.id)]
-                                )
+                        cr, uid, eval(dim_map.match_opt_condition) +
+                        [('dimension_id', '=', dim_map.mapped_dimension_type.id)]
+                    )
+                else:
+                    raise NotImplementedError
                 # only one option should match for each map.
                 if len(search_option_id) == 1:
                     search_option_id = search_option_id[0]
@@ -288,17 +292,17 @@ class BomTemplate(orm.Model):
                 prod_tmpl = bom.product_id.product_tmpl_id
                 dimension_ids = [dim.id for dim in prod_tmpl.dimension_type_ids]
                 optional_tmpl_dims = set(dim_type_obj.search(
-                                            cr, uid,
-                                            [('mandatory_dimension', '=', False),
-                                             ('id', 'in', dimension_ids)]
-                                            )
-                                         )
+                    cr, uid,
+                    [('mandatory_dimension', '=', False),
+                     ('id', 'in', dimension_ids)]
+                )
+                )
                 mandatory_tmpl_dims = set(dim_type_obj.search(
-                                            cr, uid,
-                                            [('mandatory_dimension', '=', True),
-                                             ('id', 'in', dimension_ids)]
-                                            )
-                                          )
+                    cr, uid,
+                    [('mandatory_dimension', '=', True),
+                     ('id', 'in', dimension_ids)]
+                )
+                )
                 dim_maps = bom.dimension_map_ids
                 mapped_dims = []
                 # Then any existing dimension maps are dropped from the set
@@ -325,27 +329,28 @@ class BomTemplate(orm.Model):
 
                 for dim_id in mandatory_tmpl_dims:
                     search_option_id = dim_option_obj.search(cr, uid, [
-                                            ('dimension_id', '=', dim_id),
-                                            ('id', 'in', orig_variant_option_ids)
-                                            ])
+                        ('dimension_id', '=', dim_id),
+                        ('id', 'in', orig_variant_option_ids)
+                    ])
                     if search_option_id and len(search_option_id) == 1:
                         candidates.intersection_update(_find_candidates(
-                                            candidates, search_option_id[0]))
+                            candidates, search_option_id[0]))
 
                 if len(candidates) != 1:
                     raise orm.except_orm(_('Error'),
                                          _('No matching product found!'))
             product = prod_obj.browse(cr, uid, list(candidates)[0])
-
+        elif addthis:
+            product = bom.product_id
         #now we have a product id that matches
         old_id = properties[-1].get('product_id', False)
         if bom.bom_lines:
             #any recursively called sub bom will need the matched product_id
             properties[-1].update({'product_id': product.id})
         res = super(BomTemplate, self)._bom_explode(
-                                cr, uid, bom, factor, properties=properties,
-                                addthis=addthis, level=level,
-                                routing_id=routing_id)
+            cr, uid, bom, factor, properties=properties,
+            addthis=addthis, level=level,
+            routing_id=routing_id)
         properties[-1].update({'product_id': old_id})
         if res and not bom.bom_lines:
             res[0][0].update({'name': product.name,
@@ -371,7 +376,7 @@ class MrpProduction(orm.Model):
         for production in self.browse(cr, uid, ids):
             properties[-1]['product_id'] = production.product_id.id
             res = super(MrpProduction, self)._action_compute_lines(
-                                        cr, uid, [production.id],
-                                        properties=properties, context=context
-                                        )
+                cr, uid, [production.id],
+                properties=properties, context=context
+            )
         return res

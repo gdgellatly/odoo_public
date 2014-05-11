@@ -91,11 +91,11 @@
             <field name="arch" type="xml">
                 <xpath expr="/form//field[@name='product_id'][@on_change='product_id_change(product_id)']" position="attributes" >
                     <attribute name="domain">[('has_bom','=',True)]</attribute>
-                    <attribute name="context"></attribute>
+                    <attribute name="context"/>
                 </xpath>
                 <xpath expr="/form//field[@name='bom_id']" position="attributes" >
                     <attribute name="domain">['|',('product_id.has_bom','=',True),('product_id','=',product_id)]</attribute>
-                    <attribute name="context"></attribute>
+                    <attribute name="context"/>
                 </xpath>
             </field>
         </record>
