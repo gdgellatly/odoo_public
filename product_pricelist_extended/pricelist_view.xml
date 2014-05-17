@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data>
+    		 <record model="ir.ui.view" id="product_pricelist_item_form_view">
+                <field name="name">product.pricelist.item.form</field>
+                <field name="model">product.pricelist.item</field>
+                <field name="type">form</field>
+                <field name="inherit_id" ref="product.product_pricelist_item_form_view"/>
+                <field name="arch" type="xml">
+                	<form string="Products Listprices Items" position="replace">
+                    <form string="Products Listprices Items" version="7.0">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field colspan="4" name="name"/></h1>
+                		<group colspan="4" col="4">
+                            <separator string="Parameters" colspan="4"/>
+                                <field name="sequence"/>
+                                <field name="min_quantity"/>
+                                <field name="price_round" string="Rounding Method"/>
+                            </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company" invisible="1"/>
+                                <separator string="Single Match" colspan="5"/>
+                				<field name="product_id" on_change="product_id_change(product_id)" select="1"/>
+	                    		<field name="product_tmpl_id" select="1"/>
+	                    		<field name="categ_id" select="1"/>
+							<separator string="Multiple Match" colspan="5" />
+	                        	<field name="tmpl_ids" widget="many2many_tags" string="Product Templates"/>
+	                        	<field name="product_ids" mode="tree" colspan="5" widget="many2many">
+	                        		<tree string="Products to Match">
+	                        			<field name="code"/>
+	                        			<field name="name"/>
+	                        		</tree>						
+	                        	</field>
+	                        	
+ 						</group>
+                     <group col="6" colspan="5">
+                        <label string="New Price ="/>
+                        <label string="Base Price"/>
+                        <label string="* ( 1 + "/>
+                        <field name="price_discount" nolabel="1"/>
+                        <label string=" ) + "/>
+                        <field name="price_surcharge" nolabel="1"/>
+                        <newline/>
+                        <field name="price_min_margin" string="Min. Margin" invisible="1"/>
+                        <field name="price_max_margin" string="Max. Margin" invisible="1"/>
+                    </group>
+
+                	</form>
+                	</form>
+                </field>
+            </record>
+    
+    </data>
+</openerp>

@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<openerp>
+<data noupdate="1">
+
+    <record id="customer_statement_report_id" model="ir.actions.report.xml">
+        <field name="name">Pricelist Report</field>
+        <field name="type">ir.actions.report.xml</field>
+        <field name="model">product.pricelist</field>
+        <field name="report_name">product.pricelist.report</field>
+        <field name="report_type">aeroo</field>
+        <field name="in_format">oo-odt</field>
+        <field name="report_rml">product_pricelist_extended/report/pricelist_report.odt</field>
+        <field name="parser_state">default</field>
+        <field name="tml_source">file</field>
+    </record>
+
+</data>
+</openerp>
+
