@@ -1,0 +1,6 @@
+---Fields in module 'bom_variant_multi'---
+bom_variant_multi / mrp.bom                  / product_tmpl_id (many2one)    : DEL relation: product.template
+---XML records in module 'bom_variant_multi'---
+NEW ir.actions.act_window: bom_variant_multi.dimension_map_action
+NEW ir.ui.menu: bom_variant_multi.menu_view_dimension_map_mrp
+NEW ir.ui.view: bom_variant_multi.mrp_production_form_view

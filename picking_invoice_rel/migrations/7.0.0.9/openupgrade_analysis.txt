@@ -1,0 +1,7 @@
+---Fields in module 'picking_invoice_rel'---
+picking_invoice_rel / account.invoice          / sale_order_ids (many2many)    : NEW relation: sale.order
+---XML records in module 'picking_invoice_rel'---
+NEW ir.ui.view: picking_invoice_rel.invoice_sale_order_form
+NEW ir.ui.view: picking_invoice_rel.stock_picking_inherit_sale
+NEW ir.ui.view: picking_invoice_rel.view_picking_out_tree_client_ref
+NEW ir.ui.view: picking_invoice_rel.view_view_order_tree_client_ref

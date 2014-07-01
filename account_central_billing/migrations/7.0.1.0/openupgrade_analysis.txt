@@ -1,0 +1,3 @@
+---Fields in module 'account_central_billing'---
+---XML records in module 'account_central_billing'---
+-- nothing has changed in this module
