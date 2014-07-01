@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+     <data>
+
+        <record id="customer_statement_view" model="ir.ui.view">
+            <field name="name">Statement of Account</field>
+            <field name="model">account.partner.statement</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+            <form string="Report Options">
+                <separator string="Partner Statement of Account" colspan="4"/>
+            	<field name="company_id" widget="selection" on_change="onchange_aging(aging, company_id)"/>
+                <field name="target_move"/>
+                <field name="statement_type" on_change="onchange_statement_type(statement_type)"/>
+                <group colspan="4" col="6">              
+                <field name="initial_balance"/>                
+                <field name="reconcil"/>
+                <field name="zero_balance"/>
+                <field name="groupdebtor" />
+                <field name="multicompany" />
+                </group>
+                <separator string="Aging" colspan="4"/>
+                <group colspan="2" col="2">
+                <field name="aging" on_change="onchange_aging(aging, company_id)" colspan="4"/>
+                </group>
+                <group col="4" colspan="2">
+                	<group col="4" colspan="4" attrs="{'invisible':[('aging', '=', 'months')]}">
+            		<field name="date_from" attrs="{'required':[('aging', '=', 'days')]}" />
+                    <field name="days" attrs="{'required':[('aging', '=', 'days')]}" />
+                	</group>
+                	<group col="4" colspan="4" attrs="{'invisible':[('aging', '=', 'days')]}">    
+                    <field name="period_from" domain="[('company_id', '=', company_id)]" attrs="{'required':[('aging', '=', 'months')]}" />
+             		</group>                   
+                </group>
+             
+                <separator string="Partners" colspan="4" />
+       			<field name="partners" colspan="4" rowspan="12" nolabel="1"/>        			
+                <group col="4" colspan="4">
+                    <button icon="gtk-cancel" special="cancel" string="Cancel" colspan="2"/>
+                    <button icon="gtk-print" name="check_report" string="Print" type="object" colspan="2" default_focus="1"/>
+                </group>
+                </form>
+            </field>
+        </record>
+
+    <act_window
+            id="action_partner_statement_view"
+            name="Partner Statement"
+            view_mode="form"
+            view_type="form"
+            res_model="account.partner.statement"
+            src_model="res.partner"
+            groups="account.group_account_manager,account.group_account_user"
+            target="new"	/>
+	
+	<menuitem icon="STOCK_PRINT"
+		id="menu_partner_account_statement" 
+		name="Statement of Account"
+		groups="account.group_account_manager,account.group_account_user"
+		parent="account.next_id_22" 
+		action="action_partner_statement_view"/>
+
+    </data>
+</openerp>
