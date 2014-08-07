@@ -18,7 +18,6 @@
 @author: Graeme Gellatly
 @organization: Openforsmallbusiness.co.nz
 """
-import time
 from openerp.osv import orm, fields
 from openerp.tools.translate import _
 # noinspection PyUnresolvedReferences
@@ -46,7 +45,6 @@ class ProductPricelist(orm.Model):
            @note: since I don't believe that the min and max margin code works
                    it is disabled in order to speed things up.
         """
-        t1 = time.time()
         def _create_parent_category_list(cat_id, categ_lst):
             """
             Creates parent category list.
