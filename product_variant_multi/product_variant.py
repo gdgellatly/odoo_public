@@ -139,7 +139,7 @@ class ProductVariantDimensionOption(orm.Model):
                                         'Dimension Type', ondelete='cascade'),
     }
 
-    _order = "dimension_id, sequence, name"
+    _order = "dimension_id, name"
 
     def button_add_option(self, cr, uid, ids, context=None):
         """

@@ -111,19 +111,19 @@ class ProductProduct(orm.Model):
         if not args:
             args = []
         if name:
-            ids = self.search(cr, user, [('default_code', '=', name)] + args,
+            if ' ' not in name:
+                ids = self.search(cr, user, ['|', ('default_code', '=', name), ('ean13', '=', name)] + args,
                               limit=limit, context=context)
-            if not len(ids):
-                ids = self.search(cr, user, [('ean13', '=', name)] + args,
-                                  limit=limit, context=context)
-            if not len(ids):
-                ids = self.search(cr, user,
-                                  [('default_code', operator, name)] + args,
-                                  limit=limit, context=context)
-                args2 = [['name', operator, x] for x in str.split(name)]
-                ids += self.search(cr, user, args + args2, limit=limit,
+                if not ids:
+                    ids = self.search(cr, user,
+                                    [('default_code', operator, name)] + args,
+                                    limit=limit, context=context)
+            else:
+                ids = []
+            args2 = [('name', operator, x) for x in str.split(name)]
+            ids += self.search(cr, user, args + args2, limit=limit,
                                    context=context)
-            if not len(ids):
+            if not ids:
                 ptrn = re.compile('(\[(.*?)\])')
                 res = ptrn.search(name)
                 if res:
@@ -408,6 +408,8 @@ class ProductProduct(orm.Model):
     _columns = {
         'name': fields.char('Name', size=128, translate=True),
         'variants': fields.char('Variants', size=128),
+        'product_tmpl_id': fields.many2one('product.template', 'Product Template', auto_join=True,
+                                           required=True, ondelete="cascade", select=True),
         'dimension_value_ids': fields.many2many(
             'product.variant.dimension.value',
             'product_product_dimension_rel',
