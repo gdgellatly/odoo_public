@@ -219,15 +219,15 @@ class BomTemplate(orm.Model):
         #product_id is the product we want to build a bom for, e.g. the parent
         prod_obj = self.pool['product.product']
         try:
-            product = prod_obj.browse(cr, uid, properties[-1].get('product_id'))
+            product = prod_obj.browse(cr, uid, properties[-1].get('prior_product_id', bom.product_id))
         except:
             product = bom.product_id
 
-        if bom.match_condition and product.id not in prod_obj.search(
-                cr, uid, eval(bom.match_condition)):
+        if bom.match_condition and not prod_obj.search(
+                cr, uid, eval(bom.match_condition) + [('id', '=', product.id)]):
             return [], []
         if bom.adj_weight:
-            factor = product.weight or 1.0 * factor
+            factor = (product.weight or 1.0) * factor
 
         if bom.bom_template and addthis:
             def _find_candidates(products, option):
@@ -343,15 +343,13 @@ class BomTemplate(orm.Model):
         elif addthis:
             product = bom.product_id
         #now we have a product id that matches
-        old_id = properties[-1].get('product_id', False)
-        if bom.bom_lines:
-            #any recursively called sub bom will need the matched product_id
-            properties[-1].update({'product_id': product.id})
+        properties[-1].update({'prior_product_id': properties[-1]['product_id'],
+                               'product_id': product.id})
         res = super(BomTemplate, self)._bom_explode(
             cr, uid, bom, factor, properties=properties,
             addthis=addthis, level=level,
             routing_id=routing_id)
-        properties[-1].update({'product_id': old_id})
+        properties[-1].update({'product_id': properties[-1]['prior_product_id']})
         if res and not bom.bom_lines:
             res[0][0].update({'name': product.name,
                               'product_id': product.id})
@@ -371,10 +369,11 @@ class MrpProduction(orm.Model):
         """
         if properties is None:
             properties = []
-        properties.append({'product_id': False})
+        properties.append({'product_id': False, 'prior_product_id': False})
         res = []
         for production in self.browse(cr, uid, ids):
-            properties[-1]['product_id'] = production.product_id.id
+            properties[-1].update({'product_id': production.product_id.id,
+                                   'prior_product_id': production.product_id.id})
             res = super(MrpProduction, self)._action_compute_lines(
                 cr, uid, [production.id],
                 properties=properties, context=context
