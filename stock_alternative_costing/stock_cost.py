@@ -63,13 +63,11 @@ class StockMove(orm.Model):
             if product.qty_available <= 0.0:
                 new_std_price = new_price
             else:
-                # Get the standard price
                 amount_unit = product.price_get(
                     'standard_price',
                     context=context)[product.id]
                 new_std_price = (((amount_unit * product_avail)
                                   + (new_price * qty)) / (product_avail + qty))
-            # Write the field according to price type field
         else:
             # Can there be an else?
             raise orm.except_orm('Not Implemented', 'Please Raise a bug report')
