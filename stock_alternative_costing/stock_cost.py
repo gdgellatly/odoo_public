@@ -83,7 +83,7 @@ class StockMove(orm.Model):
         TODO: This function can be improved to include more than just
         materials used in production - check OCA modules
         """
-        move_obj = self.pool['account.move']
+        move_obj = self.pool['stock.move']
         uom_obj = self.pool['product.uom']
 
         reference_currency_id = (move.price_currency_id and
