@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-##############################################################################
+# #############################################################################
 #
 #    OpenERP, Open Source Management Solution
 #    Copyright (C) 2004-2008 Tiny SPRL (<http://tiny.be>). All Rights Reserved
@@ -113,16 +113,16 @@ class ProductProduct(orm.Model):
         if name:
             if ' ' not in name:
                 ids = self.search(cr, user, ['|', ('default_code', '=', name), ('ean13', '=', name)] + args,
-                              limit=limit, context=context)
+                                  limit=limit, context=context)
                 if not ids:
                     ids = self.search(cr, user,
-                                    [('default_code', operator, name)] + args,
-                                    limit=limit, context=context)
+                                      [('default_code', operator, name)] + args,
+                                      limit=limit, context=context)
             else:
                 ids = []
             args2 = [('name', operator, x) for x in str.split(name)]
             ids += self.search(cr, user, args + args2, limit=limit,
-                                   context=context)
+                               context=context)
             if not ids:
                 ptrn = re.compile('(\[(.*?)\])')
                 res = ptrn.search(name)
