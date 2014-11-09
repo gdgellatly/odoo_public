@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-##############################################################################
+# #############################################################################
 #
 #    OpenERP, Open Source Management Solution
 #    Copyright (C) 2004-2011 Tiny SPRL (<http://tiny.be>).
@@ -19,27 +19,28 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from osv import fields, osv
 import logging
+from openerp.osv import orm
 
-class sale_order(osv.osv):
+
+class SaleOrder(orm.Model):
     _inherit = "sale.order"
     _logger = logging.getLogger(__name__)
 
-    def action_invoice_create(self, cr, uid, ids, grouped=False, states=['confirmed', 'done', 'exception'], date_invoice = False, context=None):
-        res = super(sale_order, self).action_invoice_create(cr, uid, ids, grouped, states, date_invoice, context)
+    def action_invoice_create(self, cr, uid, ids, grouped=False, states=['confirmed', 'done', 'exception'],
+                              date_invoice=False, context=None):
+        res = super(SaleOrder, self).action_invoice_create(cr, uid, ids, grouped, states, date_invoice, context)
         if not res:
             return res
-        self._logger.debug('SO inv create ids,res:%s %s', ids,res)
+        self._logger.debug('SO inv create ids,res:%s %s', ids, res)
 
         invoice_ids = res
-        if not isinstance(invoice_ids,list):
-           invoice_ids = [invoice_ids]
+        if not isinstance(invoice_ids, list):
+            invoice_ids = [invoice_ids]
         picking_obj = self.pool.get('stock.picking')
-        picking_ids = picking_obj.search(cr, uid, [('sale_id','in',ids)])
+        picking_ids = picking_obj.search(cr, uid, [('sale_id', 'in', ids)])
         self._logger.debug('PO inv create picking_ids:%s', picking_ids)
         for picking_id in picking_ids:
-            picking_obj.write(cr, uid, picking_id, {'invoice_ids' : [(6,0, invoice_ids )]}, context=context) 
+            picking_obj.write(cr, uid, picking_id, {'invoice_ids': [(6, 0, invoice_ids )]}, context=context)
         return res
 
-sale_order()
