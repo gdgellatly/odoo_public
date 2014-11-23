@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <record model="ir.ui.view" id="quote_sale_order_form_inherit">
+            <field name="name">sale.order.form.inherit></field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_button_confirm']" position="attributes" >
+                    <attribute name="invisible">[('quote', '=', True)]</attribute>
+                </xpath>
+                <xpath expr="//label[@string='Quotation ']" position="attributes" >
+                    <attribute name="attrs">{'invisible': ['|', ('quote', '=', False), ('state','not in',('draft','sent'))]}</attribute>
+                </xpath>
+                <xpath expr="//label[@string='Quotation ']" position="after" >
+                    <label string="Draft Sales Order" attrs="{'invisible': ['|', ('quote', '=', True), ('state','not in',('draft','sent'))]}" />
+                </xpath>
+                <xpath expr="//field[@name='invoiced']" position="before">
+                    <field name="quote" />
+                </xpath>
+            </field>
+        </record>
+
+        <record id="sale.action_orders" model="ir.actions.act_window">
+            <field name="domain">[('quote','=',False)]</field>
+        </record>
+
+        <record id="sale.action_quotations" model="ir.actions.act_window">
+            <field name="domain">[('quote','=', True)]</field>
+            <field name="context">{'quote': True}</field>
+        </record>
+
+    </data>
+</openerp>
