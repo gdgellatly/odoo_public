@@ -28,38 +28,54 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
+class ProductTemplate(orm.Model):
+    _inherit = 'product.template'
+
+    def _tmpl_bom(self, cr, uid, ids, name, arg, context=None):
+        bom_obj = self.pool['mrp.bom']
+        res = dict.fromkeys(ids, False)
+        bom_ids = bom_obj.search(cr, uid, [('bom_id', '=', False),
+                                           ('bom_template', '=', True),
+                                           ('product_id.product_tmpl_id.id', 'in', ids)], context=context)
+        for bom in bom_obj.browse(cr, uid, bom_ids, context=context):
+            res[bom.product_id.product_tmpl_id.id] = True
+        return res
+
+    def _get_tmpl_ids(self, cr, uid, ids, context=None):
+        bom_obj = self.pool['mrp.bom']
+        res = [bom.product_id.product_tmpl_id.id for bom in bom_obj.browse(cr, uid, ids, context=context)]
+        return res
+
+    _columns = {'tmpl_bom': fields.function(_tmpl_bom, type='boolean', string='Has Tmpl Bom',
+                store={'product.template': (lambda self, c, u, ids, x: ids, [], 10),
+                       'mrp.bom': (_get_tmpl_ids, ['product_id', 'bom_template', 'bom_id'], 5)})}
+
+
 class ProductProduct(orm.Model):
     _inherit = 'product.product'
 
-    # noinspection PyUnusedLocal
     def _has_bom(self, cr, uid, ids, name, arg, context=None):
-        prod_obj = self.pool['product.product']
         bom_obj = self.pool['mrp.bom']
         res = dict.fromkeys(ids, False)
-        for product in self.browse(cr, uid, ids, context=context):
-            product_ids = prod_obj.search(cr, uid,
-                                          [('product_tmpl_id', '=', product.product_tmpl_id.id),
-                                           ('bom_ids', '!=', False),
-                                           ('bom_ids.bom_id', '=', False)])
-            if product_ids and (product.id in product_ids or
-                                bom_obj.search(cr, uid, [('product_id', 'in', product_ids),
-                                                         ('bom_template', '=', True)])):
-                res[product.id] = True
+        bom_ids = bom_obj.search(cr, uid, [('product_id', 'in', ids),
+                                           ('bom_id', '=', False),
+                                           ('bom_template', '=', False)])
+        for bom in bom_obj.browse(cr, uid, bom_ids, context=context):
+            res[bom.product_id.id] = True
         return res
 
     def _get_product_ids(self, cr, uid, ids, context=None):
-        res = []
         bom_obj = self.pool['mrp.bom']
-        for bom in bom_obj.browse(cr, uid, ids, context=context):
-            res.extend([x.id for x in
-                        bom.product_id.product_tmpl_id.variant_ids])
+        res = [bom.product_id.id for bom in bom_obj.browse(cr, uid, ids, context=context)]
         return res
+
+    def _get_tmpl_ids(self, cr, uid, ids, context=None):
+        return self.search(cr, uid, [('product_tmpl_id', 'in', ids)], context=context)
 
     _columns = {'has_bom': fields.function(
         _has_bom, type='boolean', string='Has Bom',
-        store={'mrp.bom': (_get_product_ids,
-                           ['product_id', 'bom_template'], 10)
-               }
+        store={'product.product': (lambda self, c, u, ids, x: ids, [], 10),
+               'mrp.bom': (_get_product_ids, ['product_id', 'bom_template', 'bom_id'], 10)}
     )}
 
 
