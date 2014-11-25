@@ -9,7 +9,7 @@
             <field name="type">form</field>
             <field name="arch" type="xml">
                 <xpath expr="//button[@name='action_button_confirm']" position="attributes" >
-                    <attribute name="attrs">{'invisible': [('quote', '=', True)]}</attribute>
+                    <attribute name="attrs">{'invisible': ['|', ('quote', '=', True), ('state','not in',('draft','sent'))]}</attribute>
                 </xpath>
                 <xpath expr="//label[@string='Quotation ']" position="attributes" >
                     <attribute name="attrs">{'invisible': ['|', ('quote', '=', False), ('state','not in',('draft','sent'))]}</attribute>
