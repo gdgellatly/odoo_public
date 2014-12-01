@@ -233,7 +233,11 @@ class BomTemplate(orm.Model):
 
         """
         #product_id is the product we want to build a bom for, e.g. the parent
+
+        if context is None:
+            context={}
         prod_obj = self.pool['product.product']
+
         try:
             product = prod_obj.browse(cr, uid, context.get('prior_product_id', bom.product_id))
         except:
