@@ -23,7 +23,7 @@
 # noinspection PyStatementEffect
 {
     'name': 'Quote Layout',
-    'version': '1.1',
+    'version': '0.9',
     'category': 'Sales',
     'author': 'O4SB',
     'website': 'http://www.openforsmallbusiness.co.nz',
@@ -32,8 +32,8 @@
     This module provides :
         Replaces old sale_layout module.
     """,
-    "init_xml": [],
-    'demo_xml': [],
+    "data": ['sale_view.xml',
+             'security/ir.model.access.csv'],
     'installable': True,
     'active': False,
 }

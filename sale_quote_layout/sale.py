@@ -2,20 +2,6 @@ from openerp.osv import orm, fields
 from openerp.addons.decimal_precision import decimal_precision as dp
 
 
-class LayoutSection(orm.Model):
-    _name = 'layout.section'
-
-    _columns = {
-        'name': fields.char('Section Title', required=True),
-        'header_text': fields.text('Header Text'),
-        'show_subtotal': fields.boolean('Show Subtotal'),
-        'sequence': fields.integer('Seq'),
-        'section_total': 'Print Section Subtotal'}
-
-    _defaults = {'sequence': 10,
-                 'show_subtotal': True}
-
-
 class SaleQuoteSection(orm.Model):
     """Quote Section"""
 
@@ -39,6 +25,11 @@ class SaleQuoteSection(orm.Model):
         return result.keys()
 
     _columns = {
+        'name': fields.char('Section Title', required=True),
+        'header_text': fields.text('Header Text'),
+        'footer_text': fields.text('Footer Text'),
+        'sequence': fields.integer('Seq'),
+        'section_total': fields.boolean('Print Section Subtotal'),
         'order': fields.many2one('sale.order', 'Quote', auto_join=True),
         'order_lines': fields.one2many(
             'sale.order.line', 'layout', 'Order Lines', auto_join=True),
@@ -47,8 +38,49 @@ class SaleQuoteSection(orm.Model):
             store={
                 'sale.quote.section': (lambda self, cr, uid, ids, c={}: ids, ['order_lines'], 10),
                 'sale.order.line': (_get_section, ['price_unit', 'tax_id', 'discount', 'product_uom_qty'], 10),
-            },)
+            },),
+        #technical fields to overcome intermediate model
+        'calc': fields.boolean('Calc'),
+        'pricelist_id': fields.integer('pricelist_id'),
+        'partner_id': fields.integer('partner_id'),
+        'date_order': fields.date('date_order'),
+        'fiscal_position': fields.integer('fiscal_position'),
+        'shop_id': fields.integer('shop_id'),
+        'order_id': fields.integer('order_id')
     }
+
+    _defaults = {'sequence': 10,
+                 'section_total': True}
+
+    def set_fields(self, cr, uid, ids, context=None):
+        """
+        This onchange just assists setting fields from the parent
+        model.
+
+        If using
+        web_context_tunnel inheriting the view and updating
+        context will allow you to set any additional fields
+        :param cr:
+        :param uid:
+        :param ids:
+        :param context:
+        :return: dict of values
+        """
+        if not context:
+            return {}
+        return {'value': context}
+
+    def write(self, cr, user, ids, vals, context=None):
+        if context is None:
+            context = {}
+        context.update({'layout': 'write'})
+        return super(SaleQuoteSection, self).write(cr, user, ids, vals, context=context)
+
+    def create(self, cr, user, vals, context=None):
+        if context is None:
+            context = {}
+        context.update({'layout': 'create'})
+        return super(SaleQuoteSection, self).write(cr, user, vals, context=context)
 
 
 class SaleOrder(orm.Model):
@@ -71,4 +103,30 @@ class SaleOrderLine(orm.Model):
     _columns = {
         'layout': fields.many2one('sale.quote.section', 'Section', auto_join=True)}
 
-    _order = {'layout, sequence asc'}
+    _order = 'layout, sequence asc'
+
+    def set_fields(self, cr, uid, ids, context=None):
+        """
+        This onchange just assists setting fields from the parent
+        model.
+
+        If using
+        web_context_tunnel inheriting the view and updating
+        context will allow you to set any additional fields
+        :param cr:
+        :param uid:
+        :param ids:
+        :param context:
+        :return: dict of values
+        """
+        if not context:
+            return {}
+        return {'value': context}
+
+    def write(self, cr, user, ids, vals, context=None):
+        print context
+        return super(SaleOrderLine, self).write(cr, user, ids, vals, context=context)
+
+    def create(self, cr, user, vals, context=None):
+        print context
+        return super(SaleOrderLine, self).create(cr, user, vals, context=None)
