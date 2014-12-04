@@ -10,11 +10,11 @@ class SaleQuoteSection(orm.Model):
 
     def _amount_section(self, cr, uid, ids, field_name, arg, context=None):
         cur_obj = self.pool['res.currency']
-        res = {}
-        for section in self.browse(cr, uid, ids, context=context):
-            cur = section.order.pricelist_id.currency_id
-            res[section.id] = section.order_lines and cur_obj.round(
-                cr, uid, cur, sum([l.subtotal for l in section.order_lines])) or 0.00
+        res = dict.fromkeys(ids, 0.00) #{}
+        # for section in self.browse(cr, uid, ids, context=context):
+        #     cur = section.order.pricelist_id.currency_id
+        #     res[section.id] = section.order_lines and cur_obj.round(
+        #         cr, uid, cur, sum([l.subtotal for l in section.order_lines])) or 0.00
         return res
 
     def _get_section(self, cr, uid, ids, context=None):
@@ -129,4 +129,4 @@ class SaleOrderLine(orm.Model):
 
     def create(self, cr, user, vals, context=None):
         print context
-        return super(SaleOrderLine, self).create(cr, user, vals, context=None)
+        return super(SaleOrderLine, self).create(cr, user, vals, context=context)
