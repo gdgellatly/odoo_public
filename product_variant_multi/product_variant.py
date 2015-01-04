@@ -41,6 +41,7 @@ _logger = logging.getLogger(__name__)
 class ProductVariantDimensionType(orm.Model):
     _name = "product.variant.dimension.type"
     _description = "Dimension Type"
+    _rec_name = 'description'
 
     _columns = {
         'description': fields.char('Description', size=64, translate=True),
@@ -71,7 +72,7 @@ class ProductVariantDimensionType(orm.Model):
             args = None
         # noinspection PyTypeChecker
         return super(ProductVariantDimensionType,
-                     self).name_search(cr, uid, '', args, 'ilike', None, None)
+                     self).name_search(cr, uid, name, args, 'ilike', None, None)
 
     def button_add_all_option(self, cr, uid, ids, context=None):
         """
