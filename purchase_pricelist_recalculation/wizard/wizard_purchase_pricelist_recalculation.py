@@ -53,7 +53,7 @@ class PurchaseExtendedWizard(orm.TransientModel):
             for line in po_obj.order_line:
                 vals = order_line_obj.product_id_change(
                     cr, uid, line.id, pricelist_id.id, line.product_id.id,
-                    qty=line.product_qty, uom=line.product_uom.id,
+                    qty=line.product_qty, uom_id=line.product_uom.id,
                     partner_id=partner_id, date_order=date_order
                 )
                 if vals.get('value', False):
