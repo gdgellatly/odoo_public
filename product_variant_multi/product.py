@@ -93,7 +93,7 @@ class ProductProduct(orm.Model):
             args2 = []
             for arg in args:
                 if arg[0] == 'name' and ' ' in arg[2]:
-                    args2 += [['name', arg[1], x] for x in str.split(arg[2])]
+                    args2 += [['name', arg[1], x] for x in arg[2].split()]
                     args.remove(arg)
             args = args + args2
         return super(ProductProduct, self).search(cr, user, args,
@@ -120,7 +120,7 @@ class ProductProduct(orm.Model):
                                       limit=limit, context=context)
             else:
                 ids = []
-            args2 = [('name', operator, x) for x in str.split(name)]
+            args2 = [('name', operator, x) for x in name.split()]
             ids += self.search(cr, user, args + args2, limit=limit,
                                context=context)
             if not ids:
