@@ -93,14 +93,12 @@ class ProductProduct(orm.Model):
             args2 = []
             for arg in args:
                 if arg[0] == 'name' and ' ' in arg[2]:
-                    args2 += [['name', arg[1], x] for x in arg[2].split()]
-                    args.remove(arg)
+                    args2 += [[arg[0], arg[1], x] for x in arg[2].split()]
+                    arg[2] = arg[2].split()[0]
             args = args + args2
-        return super(ProductProduct, self).search(cr, user, args,
-                                                  offset=offset, limit=limit,
-                                                  order=order,
-                                                  context=context,
-                                                  count=count)
+        return super(ProductProduct, self).search(
+            cr, user, args, offset=offset, limit=limit, order=order,
+            context=context, count=count)
 
     def name_search(self, cr, user, name='', args=None, operator='ilike',
                     context=None, limit=100):
