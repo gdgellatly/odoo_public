@@ -138,8 +138,7 @@ class ProductProduct(orm.Model):
         return result
 
     #variant update functions
-    @staticmethod
-    def simple_build_product_name(products, vals):
+    def simple_build_product_name(self, cr, uid, products, vals, context=None):
         vals[0].append('name')
         tmpl_name = products[0].product_tmpl_id.name or ''
         [v.append('%s %s' % (str(tmpl_name),
