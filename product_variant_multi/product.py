@@ -94,6 +94,8 @@ class ProductProduct(orm.Model):
             for arg in args:
                 if arg[0] == 'name' and ' ' in arg[2]:
                     args2 += [[arg[0], arg[1], x] for x in arg[2].split()]
+                    if isinstance(arg, tuple):
+                        arg = list(arg)
                     arg[2] = arg[2].split()[0]
             args = args + args2
         return super(ProductProduct, self).search(
