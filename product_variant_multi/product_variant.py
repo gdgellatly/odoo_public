@@ -527,17 +527,16 @@ class ProductTemplate(orm.Model):
             vals = generator(variants_obj.build_variants_code)
             vals = generator(variants_obj.update_variant_price_and_weight)
             vals = generator(variants_obj.build_product_code_and_properties)
-            if len(self.pool.get('res.lang').search(cr, uid, [])) == 1:
-                vals = generator(variants_obj.simple_build_product_name)
-                temp_insert_and_update()
-            else:
-                # play it safe and go the long way
-                temp_insert_and_update()
-                cr.commit()
-                _logger.debug("Start of generation/update of product names...")
-                variants_obj.build_product_name(cr, uid, product_ids,
-                                                context=context)
-                _logger.debug("End of generation/update of product names.")
+            vals = generator(variants_obj.simple_build_product_name)
+            temp_insert_and_update()
+            # else:
+            #     # play it safe and go the long way
+            #     temp_insert_and_update()
+            #     cr.commit()
+            #     _logger.debug("Start of generation/update of product names...")
+            #     variants_obj.build_product_name(cr, uid, product_ids,
+            #                                     context=context)
+            #     _logger.debug("End of generation/update of product names.")
             t2 = time.time()
             time_diff = (t2 - t1) * 1000.0
             _logger.debug("The %s took %0.3f ms to create %d and "
