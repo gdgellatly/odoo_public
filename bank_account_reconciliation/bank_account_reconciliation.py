@@ -578,10 +578,11 @@ class BankAccRecStatementLine(orm.Model):
                          for line in self.browse(cr, uid, ids, context=context)
                          ]
         # Reset field values in move lines to be added later
-        aml_obj.write(cr, uid, move_line_ids,
-                      {'draft_assigned_to_statement': False,
-                       'cleared_bank_account': False,
-                       'bank_acc_rec_statement_id': False,
-                       }, context=context)
+        if move_line_ids:
+            aml_obj.write(cr, uid, move_line_ids,
+                          {'draft_assigned_to_statement': False,
+                           'cleared_bank_account': False,
+                           'bank_acc_rec_statement_id': False,
+                           }, context=context)
         return super(BankAccRecStatementLine, self).unlink(
             cr, uid, ids, context=context)
