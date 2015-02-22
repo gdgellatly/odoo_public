@@ -279,7 +279,7 @@ class BomTemplate(orm.Model):
 
                 elif dim_map.mapping_type == 'one2diff':
                     # noinspection PyUnusedLocal
-                    base = dim_option_obj.browse(cr, uid, base_option)
+                    base = dim_option_obj.browse(cr, uid, base_option)[0]
                     search_option_id = dim_option_obj.search(
                         cr, uid, eval(dim_map.match_opt_condition) +
                         [('dimension_id', '=', dim_map.mapped_dimension_type.id)]
