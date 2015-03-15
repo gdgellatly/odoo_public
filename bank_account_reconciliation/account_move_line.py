@@ -38,6 +38,13 @@ class AccountMoveLine(orm.Model):
             help='Check if the move line is assigned to statement lines')
     }
 
+    def unlink(self, cr, uid, ids, context=None):
+        for aml in self.browse(cr, uid, ids, context=context):
+            if aml.cleared and aml.bank_acc_rec_statement_id and aml.bank_acc_rec_statement_id.state == 'done':
+                raise orm.except_orm(
+                    "Error", "Cannot delete moves already reconciled "
+                             "on bank statement")
+
     def copy_data(self, cr, uid, id, default=None, context=None):
         if default is None:
             default = {}

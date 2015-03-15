@@ -309,7 +309,7 @@ class BankAccRecStatement(orm.Model):
                                                      context=context):
                 if obj.keep_previous_uncleared_entries:
                     # only take bank_acc_rec_statement at state cancel or done
-                    if not self.is_stmt_done(cr, uid, line.id,
+                    if not self.is_stmt_done(cr, uid, line,
                                              context=context):
                         continue
                 res = (0, 0, self._get_move_line_write(line))
@@ -510,6 +510,7 @@ WHERE statement_id=%s''', (statement.id,))
         'company_id': lambda s, c, u, x: s.pool['res.users'].browse(
             c, u, u, x).company_id.id,
         'ending_date': fields.date.context_today,
+        'keep_previous_uncleared_entries': True
     }
     
     _order = "ending_date desc"
@@ -545,7 +546,7 @@ class BankAccRecStatementLine(orm.Model):
             ondelete='cascade'),
         'move_line_id': fields.many2one(
             'account.move.line', 'Journal Item', required=True,
-            help="Related Journal Item."),
+            help="Related Journal Item.", ondelete='cascade'),
         'cleared_bank_account': fields.boolean(
             'Cleared? ',
             help='Check if the transaction has cleared from the bank'),
@@ -560,6 +561,8 @@ class BankAccRecStatementLine(orm.Model):
         'type': fields.selection([('dr', 'Debit'), ('cr', 'Credit')], 'Cr/Dr'),
     }
 
+
+
     def create(self, cr, uid, vals, context=None):
         # This sucks and is really slow so we try and
         # and bulk write it at statement create
@@ -573,12 +576,11 @@ class BankAccRecStatementLine(orm.Model):
             cr, uid, vals, context=context)
 
     def unlink(self, cr, uid, ids, context=None):
-        aml_obj = self.pool['account.move.line']
-        move_line_ids = [line.move_line_id.id
-                         for line in self.browse(cr, uid, ids, context=context)
-                         ]
+        move_line_ids = [line.move_line_id.id for line in
+                         self.browse(cr, uid, ids, context=context)]
         # Reset field values in move lines to be added later
         if move_line_ids:
+            aml_obj = self.pool['account.move.line']
             aml_obj.write(cr, uid, move_line_ids,
                           {'draft_assigned_to_statement': False,
                            'cleared_bank_account': False,
