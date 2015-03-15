@@ -382,6 +382,9 @@ WHERE statement_id=%s''', (statement.id,))
             pipe(domain, aml_search, aml_browse, filter(keep),
                  map(self._get_move_line_write), groupby(is_credit)))
 
+        val['value'].update({'starting_balance': self._get_starting_balance(
+            cr, uid, ids and ids[0] or 0, context=context)})
+
         return val
 
     _name = "bank.acc.rec.statement"
@@ -504,13 +507,23 @@ WHERE statement_id=%s''', (statement.id,))
             ('cancel', 'Cancel')
             ], 'State', select=True, readonly=True),
     }
-    
+
+    def _get_starting_balance(self, cr, uid, id, account_id, context=None):
+        existing_statement_id = self.search(
+            cr, uid, [('account_id', '=', account_id), ('id', '!=', id)],
+            limit=1, order='ending_date desc')
+        if existing_statement_id:
+            return self.browse(
+                cr, uid, existing_statement_id[0],
+                context=context).ending_balance
+        return 0.00
+
     _defaults = {
         'state': 'draft',
         'company_id': lambda s, c, u, x: s.pool['res.users'].browse(
             c, u, u, x).company_id.id,
         'ending_date': fields.date.context_today,
-        'keep_previous_uncleared_entries': True
+        'keep_previous_uncleared_entries': True,
     }
     
     _order = "ending_date desc"
