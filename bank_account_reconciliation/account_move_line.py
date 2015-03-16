@@ -44,6 +44,7 @@ class AccountMoveLine(orm.Model):
                 raise orm.except_orm(
                     "Error", "Cannot delete moves already reconciled "
                              "on bank statement")
+        return super(AccountMoveLine, self).unlink(cr, uid, ids, context=context)
 
     def copy_data(self, cr, uid, id, default=None, context=None):
         if default is None:
