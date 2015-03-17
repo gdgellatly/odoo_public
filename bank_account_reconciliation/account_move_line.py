@@ -40,7 +40,7 @@ class AccountMoveLine(orm.Model):
 
     def unlink(self, cr, uid, ids, context=None):
         for aml in self.browse(cr, uid, ids, context=context):
-            if aml.cleared and aml.bank_acc_rec_statement_id and aml.bank_acc_rec_statement_id.state == 'done':
+            if aml.cleared_bank_account and aml.bank_acc_rec_statement_id and aml.bank_acc_rec_statement_id.state == 'done':
                 raise orm.except_orm(
                     "Error", "Cannot delete moves already reconciled "
                              "on bank statement")
