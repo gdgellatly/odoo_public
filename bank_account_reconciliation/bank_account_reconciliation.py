@@ -381,9 +381,8 @@ WHERE statement_id=%s''', (statement.id,))
         val['value'].update(
             pipe(domain, aml_search, aml_browse, filter(keep),
                  map(self._get_move_line_write), groupby(is_credit)))
-
         val['value'].update({'starting_balance': self._get_starting_balance(
-            cr, uid, ids and ids[0] or 0, context=context)})
+            cr, uid, ids and ids[0] or 0, account_id, context=context)})
 
         return val
 
