@@ -224,7 +224,9 @@
                         <field name="is_multi_variants"/>
                     </group>
                 </xpath>
-                <xpath expr="//group[@name='status']/field[@name='categ_id']" position="replace" />
+                <xpath expr="//group[@name='status']/field[@name='categ_id']" position="replace" >
+                        <field name="company_id" group="base.group_multi_company" />
+                </xpath>
                 <xpath expr="//form/notebook" position="inside">
                     <page string="Variants" attrs="{'invisible':[('is_multi_variants','=',False)]}">
                         <group>
