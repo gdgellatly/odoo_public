@@ -9,7 +9,7 @@
 # noinspection PyStatementEffect
 {
     'name': 'Pricelist Extensions',
-    'version': '1.1',
+    'version': '1.2',
     'category': '',
     'author': 'O4SB',
     'website': 'http://www.openforsmallbusiness.co.nz',
@@ -18,11 +18,11 @@
     This module implements many2many product ids for pricelist rules and provides
     a report for checking pricelist rules.
     """,
-    "init_xml": [],
-    'update_xml': ['pricelist_view.xml',
+    'data': ['pricelist_view.xml',
+                   'product_view.xml',
+                   'security/ir.model.access.csv'
     #               'report/pricelist_report.xml'
     ],
-    'demo_xml': [],
     'installable': True,
     'active': False,
 }

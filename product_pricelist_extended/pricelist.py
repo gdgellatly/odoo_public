@@ -59,6 +59,13 @@ class ProductPricelist(orm.Model):
             else:
                 return categ_lst
 
+        # def _get_price_categ_ids(product_ids):
+        #     price_cat_obj = self.pool['product.price.category']
+        #     for product in self.browse(cr, uid, product_ids, context=None):
+        #         cat_ids = price_cat_obj.search(
+        #             cr, uid, ['|', ('product_ids', 'in', product.id),
+        #                            ('product_tmpl_ids', 'in', product.product_tmpl_id.id)])
+
         if context is None:
             context = {}
 
@@ -105,21 +112,40 @@ class ProductPricelist(orm.Model):
         if context.get('products_dict') and all(k in context['products_dict'] for k in product_ids):
             products_dict = context['products_dict']
         else:
-            cr.execute('''SELECT p.id, pt.id, pt.categ_id, pt.uos_id, pt.uom_id
-                          FROM product_product p LEFT JOIN product_template pt ON pt.id=p.product_tmpl_id
-                          WHERE p.id = ANY(%s)''', (product_ids,))
-            products_dict = {i[0]: (i[1], i[2], _create_parent_category_list(i[2], [i[2]]), i[3], i[4]) for i in cr.fetchall()}
+            cr.execute('''SELECT p.id, pt.id, pt.categ_id, pt.uos_id, pt.uom_id, array_agg(pc.id), array_agg(pc2.id)
+                          FROM product_product p
+                          LEFT JOIN product_template pt ON pt.id=p.product_tmpl_id
+                          LEFT JOIN product_price_category_product_product_rel ppc ON p.id=ppc.product_product_id
+                          LEFT JOIN product_price_category pc ON pc.id=ppc.product_price_category_id
+                          LEFT JOIN product_price_category_product_template_rel ptc ON pt.id=ptc.product_template_id
+                          LEFT JOIN product_price_category pc2 ON pc2.id=ptc.product_price_category_id
+                          WHERE p.id = ANY(%s) AND (
+                          (pc.search_pattern IS NULL OR p.default_code ILIKE '%%' || pc.search_pattern  || '%%') OR
+                          (pc2.search_pattern IS NULL OR p.default_code ILIKE '%%' || pc2.search_pattern || '%%')) AND (
+                          (pc.excl_pattern IS NULL OR p.default_code NOT ILIKE '%%' || pc.excl_pattern || '%%') OR
+                          (pc2.excl_pattern IS NULL OR p.default_code NOT ILIKE '%%' || pc2.excl_pattern || '%%'))
+                          GROUP BY p.id, pt.id, pt.categ_id, pt.uos_id, pt.uom_id
+                          ''', (product_ids,))
+
+            products_dict = {i[0]: (i[1], i[2],
+                                    _create_parent_category_list(i[2], [i[2]]), i[3], i[4],
+                                    [j for j in i[5] if j] + [k for k in i[6] if k]) for i in cr.fetchall()}
             context.update({'products_dict': products_dict})
 
         results = {}
         for product_id, qty, partner in products_by_qty_by_partner:
 
-            tmpl_id, categ_id, categ_ids, uos, uom = products_dict.get(product_id, (False, False, False, False, False))
+            tmpl_id, categ_id, categ_ids, uos, uom, price_cat_ids = products_dict.get(product_id, (False, False, False, False, False, False))
             if categ_ids:
-                categ_where = '(categ_id IN (' + ','.join(
-                    [str(x) for x in categ_ids]) + '))'
+                categ_where = cr.mogrify(
+                    'categ_id = ANY(%s) OR categ_id IS NULL', (categ_ids,))
             else:
                 categ_where = '(categ_id IS NULL)'
+            if price_cat_ids:
+                price_cat_where = cr.mogrify(
+                    'price_categ = ANY(%s) OR price_categ IS NULL', (price_cat_ids,))
+            else:
+                price_cat_where = '(price_categ IS NULL)'
 
             if partner:
                 partner_where = ('base <> -2 OR %s IN '
@@ -143,7 +169,8 @@ class ProductPricelist(orm.Model):
                     'AND (tmpl_id IS NULL OR tmpl_id = %s) '
                     'AND (product_id IS NULL OR product_id = %s) '
                     'AND (prod_id IS NULL or prod_id = %s) '
-                    'AND (' + categ_where + ' OR (categ_id IS NULL)) '
+                    'AND (' + categ_where + ' ) '
+                    'AND (' + price_cat_where + ') '
                     'AND (' + partner_where + ') '
                     'AND price_version_id = %s '
                     'AND (min_quantity IS NULL OR min_quantity <= %s) '
@@ -240,5 +267,6 @@ class Productpricelistitem(orm.Model):
         'tmpl_ids': fields.many2many(
             'product.template', 'pricelist_item_tmpl_rel',
             'pricelist_item_id', 'tmpl_id', string="Templates"),
+        'price_categ': fields.many2one('product.price.category', string='Pricing Category')
     }
 
