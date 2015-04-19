@@ -17,7 +17,7 @@
                    <field name="debit_credit" attrs="{'invisible': [('enable_filter','=',True)]}"/>
                 </group>
                     <group invisible="context.get('as_of', 0)" attrs="{'invisible':[('adv_options', '=', False)]}">
-                        <field name="filter" on_change="onchange_filter(filter, fiscalyear_id)"/>
+                        <field name="filter" on_change="onchange_filter(filter, fiscalyear_id, context)" />
                     </group>
                     <group string="Dates"  attrs="{'invisible':[('filter', '!=', 'filter_date')], 'required':[('filter', '=', 'filter_date')]}">
                             <field name="date_from" invisible="context.get('as_of', 0)" />

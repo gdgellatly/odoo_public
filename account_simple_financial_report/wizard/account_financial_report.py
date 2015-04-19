@@ -30,18 +30,18 @@ class AccountingReport(orm.TransientModel):
 
     def onchange_filter(self, cr, uid, ids, filter='filter_no', fiscalyear_id=False, context=None):
         res = super(AccountingReport, self).onchange_filter(cr, uid, ids, filter=filter, fiscalyear_id=fiscalyear_id, context=context)
-        if context.get('as_of') and res['value'].get('date_from'):
+        if context and context.get('as_of') and res['value'].get('date_from'):
             res['value']['date_from'] = '1970-01-01'
         return res
 
     def _build_comparison_context(self, cr, uid, ids, data, context=None):
         result = super(AccountingReport, self)._build_comparison_context(cr, uid, ids, data, context=context)
-        if context.get('as_of') and result.get('date_from'):
+        if context and context.get('as_of') and result.get('date_from'):
             result['date_from'] = '1970-01-01'
         return result
 
     def onchange_chart_id(self, cr, uid, ids, chart_account_id=False, context=None):
         res = super(AccountingReport, self).onchange_chart_id(cr, uid, ids, chart_account_id=chart_account_id, context=context)
-        if res and context.get('as_of') and res['value'].get('fiscalyear_id'):
+        if res and context and context.get('as_of') and res['value'].get('fiscalyear_id'):
             res['value']['fiscalyear_id'] = False
         return res
