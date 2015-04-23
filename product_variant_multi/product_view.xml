@@ -1,15 +1,13 @@
-<?xml version="1.0" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <openerp>
     <data>
         
         <!-- "Product variant multi" module for OpenERP The licence is in the file __openerp__.py
             @author Alexis de Lattre <alexis.delattre@akretion.com> @author Sebastien
             Beau <sebastien.beau@akretion.com> -->
-        
-        <menuitem name="Variant dimensions" id="menu_variant_dimension" parent="product.prod_config_main"
-            />
-        
-        <!-- Views from Dimension option -->
+-->
+    <menuitem name="Variant Dimensions" id="menu_variant_dimension" parent="product.prod_config_main" />
+<!-- DIMENSION OPTION -->
         <record id="product_variant_multi_dimension_option_seach" model="ir.ui.view">
             <field name="name">product.variant.multi.dimension.option.search</field>
             <field name="model">product.variant.dimension.option</field>
@@ -24,9 +22,8 @@
         <record id="product_variant_multi_dimension_option_tree" model="ir.ui.view">
             <field name="name">product.variant.multi.dimension.option.tree</field>
             <field name="model">product.variant.dimension.option</field>
-            <field name="type">tree</field>
             <field name="arch" type="xml">
-                <tree string="Dimension Options">
+                <tree string="Dimension Options" editable="top">
                     <field name="dimension_id" invisible="not context.get('dimension_value_main_view',
                         False)" />
                     <field name="name" />
@@ -39,7 +36,6 @@
         <record id="product_variant_multi_dimension_option_form" model="ir.ui.view">
             <field name="name">product.variant.multi.dimension.option.form</field>
             <field name="model">product.variant.dimension.option</field>
-            <field name="type">form</field>
             <field name="arch" type="xml">
                 <form string="Dimension Options">
                     <field name="dimension_id" select="1" invisible="not context.get('dimension_option_main_view',
@@ -83,7 +79,6 @@
         <record id="product_variant_multi_dimension_value_tree" model="ir.ui.view">
             <field name="name">product.variant.multi.dimension.value.tree</field>
             <field name="model">product.variant.dimension.value</field>
-            <field name="type">tree</field>
             <field name="arch" type="xml">
                 <tree string="Dimension values" editable="top">
                     <field name="product_tmpl_id" invisible="not context.get('dimension_value_main_view',
@@ -102,9 +97,8 @@
         <record id="product_variant_multi_dimension_value_form" model="ir.ui.view">
             <field name="name">product.variant.multi.dimension.value.form</field>
             <field name="model">product.variant.dimension.value</field>
-            <field name="type">form</field>
             <field name="arch" type="xml">
-                <form string="Dimension values">
+                <form string="Dimension Values">
                     <field name="product_tmpl_id" invisible="not context.get('dimension_value_main_view',
                         False)" />
                     <field name="active" />
@@ -142,7 +136,6 @@
         <record id="product_variant_multi_dimension_type_tree" model="ir.ui.view">
             <field name="name">product.variant.multi.dimension.type.tree</field>
             <field name="model">product.variant.dimension.type</field>
-            <field name="type">tree</field>
             <field name="arch" type="xml">
                 <tree string="Dimension Types">
                     <field name="name" />
@@ -154,7 +147,6 @@
         <record id="product_variant_multi_dimension_type_form" model="ir.ui.view">
             <field name="name">product.variant.multi.dimension.type.form</field>
             <field name="model">product.variant.dimension.type</field>
-            <field name="type">form</field>
             <field name="arch" type="xml">
                 <form string="Dimension Types" version="7.0">
                     <header>
@@ -191,7 +183,7 @@
         </record>
         
         <record id="action_dimension_type" model="ir.actions.act_window">
-            <field name="name">Dimension types</field>
+            <field name="name">Dimension Types</field>
             <field name="res_model">product.variant.dimension.type</field>
             <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
@@ -214,7 +206,6 @@
         <record id="product_search_form_view_template" model="ir.ui.view">
             <field name="name">product.search.form.template</field>
             <field name="model">product.template</field>
-            <field name="type">search</field>
             <field name="arch" type="xml">
                 <search string="Product Template">
                     <field name="name" />
@@ -226,15 +217,16 @@
         <record id="product_variant_multi_product_template_form_view" model="ir.ui.view">
             <field name="name">product.variant.multi.product.template.form</field>
             <field name="model">product.template</field>
-            <field name="type">form</field>
             <field name="inherit_id" ref="product.product_template_form_view" />
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='categ_id']/.." position="after">
+                <xpath expr="//h2/field[@name='categ_id']" position="after">
                     <group>
                         <field name="is_multi_variants"/>
                     </group>
                 </xpath>
-                
+                <xpath expr="//group[@name='status']/field[@name='categ_id']" position="replace" >
+                        <field name="company_id" group="base.group_multi_company" />
+                </xpath>
                 <xpath expr="//form/notebook" position="inside">
                     <page string="Variants" attrs="{'invisible':[('is_multi_variants','=',False)]}">
                         <group>

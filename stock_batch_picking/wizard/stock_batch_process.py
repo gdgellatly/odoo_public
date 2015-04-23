@@ -32,7 +32,8 @@ class StockBatchProcess(orm.TransientModel):
                                              help='That will lead to abnormal negative stock values'),
     }
 
-    def _check_tracking(self, cr, uid, move):
+    @staticmethod
+    def _check_tracking(move):
         """ Checks if production lot is assigned to stock move or not.
         @return: True or False
         """
@@ -50,7 +51,7 @@ class StockBatchProcess(orm.TransientModel):
         to_remove_ids = []
         for picking in active_pickings:
             to_remove_ids.extend(
-                [move.picking_id.id for move in picking.move_lines if self._check_tracking(cr, uid, move)])
+                [move.picking_id.id for move in picking.move_lines if self._check_tracking(move)])
         active_ids = list(set(active_ids).difference(set(to_remove_ids)))
         picking_pool.action_move(cr, uid, active_ids, context)
         return {}

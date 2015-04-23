@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-##############################################################################
+# #############################################################################
 #
 #    OpenERP, Open Source Management Solution
 #    Copyright (C) 2004-2008 Tiny SPRL (<http://tiny.be>). All Rights Reserved
@@ -93,14 +93,14 @@ class ProductProduct(orm.Model):
             args2 = []
             for arg in args:
                 if arg[0] == 'name' and ' ' in arg[2]:
-                    args2 += [['name', arg[1], x] for x in str.split(arg[2])]
-                    args.remove(arg)
+                    args2 += [[arg[0], arg[1], x] for x in arg[2].split()]
+                    if isinstance(arg, tuple):
+                        arg = list(arg)
+                    arg[2] = arg[2].split()[0]
             args = args + args2
-        return super(ProductProduct, self).search(cr, user, args,
-                                                  offset=offset, limit=limit,
-                                                  order=order,
-                                                  context=context,
-                                                  count=count)
+        return super(ProductProduct, self).search(
+            cr, user, args, offset=offset, limit=limit, order=order,
+            context=context, count=count)
 
     def name_search(self, cr, user, name='', args=None, operator='ilike',
                     context=None, limit=100):
@@ -111,19 +111,19 @@ class ProductProduct(orm.Model):
         if not args:
             args = []
         if name:
-            ids = self.search(cr, user, [('default_code', '=', name)] + args,
-                              limit=limit, context=context)
-            if not len(ids):
-                ids = self.search(cr, user, [('ean13', '=', name)] + args,
+            if ' ' not in name:
+                ids = self.search(cr, user, ['|', ('default_code', '=', name), ('ean13', '=', name)] + args,
                                   limit=limit, context=context)
-            if not len(ids):
-                ids = self.search(cr, user,
-                                  [('default_code', operator, name)] + args,
-                                  limit=limit, context=context)
-                args2 = [['name', operator, x] for x in str.split(name)]
-                ids += self.search(cr, user, args + args2, limit=limit,
-                                   context=context)
-            if not len(ids):
+                if not ids:
+                    ids = self.search(cr, user,
+                                      [('default_code', operator, name)] + args,
+                                      limit=limit, context=context)
+            else:
+                ids = []
+            args2 = [('name', operator, x) for x in name.split()]
+            ids += self.search(cr, user, args + args2, limit=limit,
+                               context=context)
+            if not ids:
                 ptrn = re.compile('(\[(.*?)\])')
                 res = ptrn.search(name)
                 if res:
@@ -138,8 +138,7 @@ class ProductProduct(orm.Model):
         return result
 
     #variant update functions
-    @staticmethod
-    def simple_build_product_name(products, vals):
+    def simple_build_product_name(self, cr, uid, products, vals, context=None):
         vals[0].append('name')
         tmpl_name = products[0].product_tmpl_id.name or ''
         [v.append('%s %s' % (str(tmpl_name),
@@ -408,6 +407,8 @@ class ProductProduct(orm.Model):
     _columns = {
         'name': fields.char('Name', size=128, translate=True),
         'variants': fields.char('Variants', size=128),
+        'product_tmpl_id': fields.many2one('product.template', 'Product Template', auto_join=True,
+                                           required=True, ondelete="cascade", select=True),
         'dimension_value_ids': fields.many2many(
             'product.variant.dimension.value',
             'product_product_dimension_rel',

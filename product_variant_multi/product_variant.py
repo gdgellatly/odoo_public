@@ -41,6 +41,7 @@ _logger = logging.getLogger(__name__)
 class ProductVariantDimensionType(orm.Model):
     _name = "product.variant.dimension.type"
     _description = "Dimension Type"
+    _rec_name = 'description'
 
     _columns = {
         'description': fields.char('Description', size=64, translate=True),
@@ -71,7 +72,7 @@ class ProductVariantDimensionType(orm.Model):
             args = None
         # noinspection PyTypeChecker
         return super(ProductVariantDimensionType,
-                     self).name_search(cr, uid, '', args, 'ilike', None, None)
+                     self).name_search(cr, uid, name, args, 'ilike', None, None)
 
     def button_add_all_option(self, cr, uid, ids, context=None):
         """
@@ -139,7 +140,7 @@ class ProductVariantDimensionOption(orm.Model):
                                         'Dimension Type', ondelete='cascade'),
     }
 
-    _order = "dimension_id, sequence, name"
+    _order = "dimension_id, name"
 
     def button_add_option(self, cr, uid, ids, context=None):
         """
@@ -526,17 +527,16 @@ class ProductTemplate(orm.Model):
             vals = generator(variants_obj.build_variants_code)
             vals = generator(variants_obj.update_variant_price_and_weight)
             vals = generator(variants_obj.build_product_code_and_properties)
-            if len(self.pool.get('res.lang').search(cr, uid, [])) == 1:
-                vals = generator(variants_obj.simple_build_product_name)
-                temp_insert_and_update()
-            else:
-                # play it safe and go the long way
-                temp_insert_and_update()
-                cr.commit()
-                _logger.debug("Start of generation/update of product names...")
-                variants_obj.build_product_name(cr, uid, product_ids,
-                                                context=context)
-                _logger.debug("End of generation/update of product names.")
+            vals = generator(variants_obj.simple_build_product_name)
+            temp_insert_and_update()
+            # else:
+            #     # play it safe and go the long way
+            #     temp_insert_and_update()
+            #     cr.commit()
+            #     _logger.debug("Start of generation/update of product names...")
+            #     variants_obj.build_product_name(cr, uid, product_ids,
+            #                                     context=context)
+            #     _logger.debug("End of generation/update of product names.")
             t2 = time.time()
             time_diff = (t2 - t1) * 1000.0
             _logger.debug("The %s took %0.3f ms to create %d and "

@@ -28,38 +28,54 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
+class ProductTemplate(orm.Model):
+    _inherit = 'product.template'
+
+    def _tmpl_bom(self, cr, uid, ids, name, arg, context=None):
+        bom_obj = self.pool['mrp.bom']
+        res = dict.fromkeys(ids, False)
+        bom_ids = bom_obj.search(cr, uid, [('bom_id', '=', False),
+                                           ('bom_template', '=', True),
+                                           ('product_id.product_tmpl_id.id', 'in', ids)], context=context)
+        for bom in bom_obj.browse(cr, uid, bom_ids, context=context):
+            res[bom.product_id.product_tmpl_id.id] = True
+        return res
+
+    def _get_tmpl_ids(self, cr, uid, ids, context=None):
+        bom_obj = self.pool['mrp.bom']
+        res = [bom.product_id.product_tmpl_id.id for bom in bom_obj.browse(cr, uid, ids, context=context)]
+        return res
+
+    _columns = {'tmpl_bom': fields.function(_tmpl_bom, type='boolean', string='Has Tmpl Bom',
+                store={'product.template': (lambda self, c, u, ids, x: ids, [], 10),
+                       'mrp.bom': (_get_tmpl_ids, ['product_id', 'bom_template', 'bom_id'], 5)})}
+
+
 class ProductProduct(orm.Model):
     _inherit = 'product.product'
 
-    # noinspection PyUnusedLocal
     def _has_bom(self, cr, uid, ids, name, arg, context=None):
-        prod_obj = self.pool['product.product']
         bom_obj = self.pool['mrp.bom']
         res = dict.fromkeys(ids, False)
-        for product in self.browse(cr, uid, ids, context=context):
-            product_ids = prod_obj.search(cr, uid,
-                                          [('product_tmpl_id', '=', product.product_tmpl_id.id),
-                                           ('bom_ids', '!=', False),
-                                           ('bom_ids.bom_id', '=', False)])
-            if product_ids and (product.id in product_ids or
-                                bom_obj.search(cr, uid, [('product_id', 'in', product_ids),
-                                                         ('bom_template', '=', True)])):
-                res[product.id] = True
+        bom_ids = bom_obj.search(cr, uid, [('product_id', 'in', ids),
+                                           ('bom_id', '=', False),
+                                           ('bom_template', '=', False)])
+        for bom in bom_obj.browse(cr, uid, bom_ids, context=context):
+            res[bom.product_id.id] = True
         return res
 
     def _get_product_ids(self, cr, uid, ids, context=None):
-        res = []
         bom_obj = self.pool['mrp.bom']
-        for bom in bom_obj.browse(cr, uid, ids, context=context):
-            res.extend([x.id for x in
-                        bom.product_id.product_tmpl_id.variant_ids])
+        res = [bom.product_id.id for bom in bom_obj.browse(cr, uid, ids, context=context)]
         return res
+
+    def _get_tmpl_ids(self, cr, uid, ids, context=None):
+        return self.search(cr, uid, [('product_tmpl_id', 'in', ids)], context=context)
 
     _columns = {'has_bom': fields.function(
         _has_bom, type='boolean', string='Has Bom',
-        store={'mrp.bom': (_get_product_ids,
-                           ['product_id', 'bom_template'], 10)
-               }
+        store={'product.product': (lambda self, c, u, ids, x: ids, [], 10),
+               'mrp.bom': (_get_product_ids, ['product_id', 'bom_template', 'bom_id'], 10)}
     )}
 
 
@@ -204,7 +220,7 @@ class BomTemplate(orm.Model):
         return res
 
     def _bom_explode(self, cr, uid, bom, factor, properties=None,
-                     addthis=False, level=0, routing_id=False):
+                     addthis=False, level=0, routing_id=False, context=None):
         """ Finds Products and Workcenters for related BoM for
         manufacturing order.
         @param bom: BoM of particular product.
@@ -217,17 +233,21 @@ class BomTemplate(orm.Model):
 
         """
         #product_id is the product we want to build a bom for, e.g. the parent
+
+        if context is None:
+            context={}
         prod_obj = self.pool['product.product']
+
         try:
-            product = prod_obj.browse(cr, uid, properties[-1].get('product_id'))
+            product = prod_obj.browse(cr, uid, context.get('prior_product_id', bom.product_id))
         except:
             product = bom.product_id
 
-        if bom.match_condition and product.id not in prod_obj.search(
-                cr, uid, eval(bom.match_condition)):
+        if bom.match_condition and not prod_obj.search(
+                cr, uid, eval(bom.match_condition) + [('id', '=', product.id)]):
             return [], []
         if bom.adj_weight:
-            factor = product.weight or 1.0 * factor
+            factor = (product.weight or 1.0) * factor
 
         if bom.bom_template and addthis:
             def _find_candidates(products, option):
@@ -259,7 +279,7 @@ class BomTemplate(orm.Model):
 
                 elif dim_map.mapping_type == 'one2diff':
                     # noinspection PyUnusedLocal
-                    base = dim_option_obj.browse(cr, uid, base_option)
+                    base = dim_option_obj.browse(cr, uid, base_option)[0]
                     search_option_id = dim_option_obj.search(
                         cr, uid, eval(dim_map.match_opt_condition) +
                         [('dimension_id', '=', dim_map.mapped_dimension_type.id)]
@@ -343,15 +363,13 @@ class BomTemplate(orm.Model):
         elif addthis:
             product = bom.product_id
         #now we have a product id that matches
-        old_id = properties[-1].get('product_id', False)
-        if bom.bom_lines:
-            #any recursively called sub bom will need the matched product_id
-            properties[-1].update({'product_id': product.id})
+        context.update({'prior_product_id': context.get('product_id'),
+                        'product_id': product.id})
         res = super(BomTemplate, self)._bom_explode(
             cr, uid, bom, factor, properties=properties,
             addthis=addthis, level=level,
-            routing_id=routing_id)
-        properties[-1].update({'product_id': old_id})
+            routing_id=routing_id, context=context)
+        context.update({'product_id': context.get('prior_product_id')})
         if res and not bom.bom_lines:
             res[0][0].update({'name': product.name,
                               'product_id': product.id})
@@ -369,12 +387,17 @@ class MrpProduction(orm.Model):
                     avoid changing method signature without context
         @return: No. of products.
         """
+        if context is None:
+            context = {}
+
         if properties is None:
             properties = []
-        properties.append({'product_id': False})
+
+        context.update({'product_id': False, 'prior_product_id': False})
         res = []
         for production in self.browse(cr, uid, ids):
-            properties[-1]['product_id'] = production.product_id.id
+            context.update({'product_id': production.product_id.id,
+                            'prior_product_id': production.product_id.id})
             res = super(MrpProduction, self)._action_compute_lines(
                 cr, uid, [production.id],
                 properties=properties, context=context

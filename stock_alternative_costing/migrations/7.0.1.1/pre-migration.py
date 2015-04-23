@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
-#    OpenERP, Open Source Management Solution - module extension
-#    Copyright (C) 2010- Graeme Gellatly O4SB (<http://openforsmallbusiness.co.nz>).
-#    Copyright (C) 2004-2010 Tiny SPRL (<http://tiny.be>).
+#    OpenERP, Open Source Management Solution
+#    This module copyright (C) 2013 Sylvain LE GAL
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -20,4 +19,19 @@
 #
 ##############################################################################
 
-import account_report_statement
+from openerp.openupgrade import openupgrade
+
+column_renames = {
+    'stock_inventory_line': [('price_unit', None)],
+    'stock_production_lot': [('last_cost', None)]
+}
+
+def migrate_cost_methods(cr):
+    cr.execute('''UPDATE product_template SET cost_method = 'average' WHERE cost_method = 'lot';''')
+
+
+@openupgrade.migrate()
+def migrate(cr, version):
+    openupgrade.delete_model_workflow(cr, 'edi.invoice.o4sb')
+    openupgrade.rename_columns(cr, column_renames)
+    migrate_cost_methods(cr)

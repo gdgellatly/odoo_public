@@ -144,7 +144,7 @@ class AccountInvoice(orm.Model):
         return super(AccountInvoice, self).search(cr, uid, args, offset, limit=limit,
                                                   order=order, context=context, count=False)
 
-    def refund(self, cr, uid, ids, date=None, period_id=None, description=None, journal_id=None):
+    def refund(self, cr, uid, ids, date=None, period_id=None, description=None, journal_id=None, context=None):
         """overide refund to make sure we preserve the original ordering partner, also we
         update the credit not to display the invoice in the origin and the comments.  To work
         either the refunds must be for a single original order partner or all order partners. In
@@ -156,13 +156,13 @@ class AccountInvoice(orm.Model):
             raise orm.except_orm(_('Error:'),
                                  _('May only refund centrally billed invoices for one store at a time'))
         new_ids = super(AccountInvoice, self).refund(cr, uid, ids, date, period_id,
-                                                     description, journal_id)
+                                                     description, journal_id, context=context)
         vals_to_write = {'order_partner_id': list(order_partner_ids)[0]}
         if len(ids) == 1:
             inv_num = self.pool.get('account.invoice').browse(cr, uid, ids)[0].number
             vals_to_write.update({'comment': 'Credit Raised against Invoice %s' % inv_num,
                                   'origin': inv_num})
-        self.write(cr, uid, new_ids, vals_to_write)
+        self.write(cr, uid, new_ids, vals_to_write, context=context)
         return new_ids
 
 

@@ -1,0 +1,9 @@
+---Fields in module 'stock_alternative_costing'---
+stock_alternative_costing / product.template         / cost_method (False)           : DEL selection_keys: ['average', 'lot', 'standard'], mode: modify
+stock_alternative_costing / res.users                / default_location_id (many2one): DEL relation: stock.location
+stock_alternative_costing / stock.inventory.line     / location_id (False)           : DEL req_default: function, mode: modify
+stock_alternative_costing / stock.inventory.line     / price_unit (float)            : DEL 
+stock_alternative_costing / stock.production.lot     / last_cost (float)             : DEL 
+---XML records in module 'stock_alternative_costing'---
+DEL ir.ui.view: stock_alternative_costing.view_inventory_form
+DEL ir.ui.view: stock_alternative_costing.view_user_form

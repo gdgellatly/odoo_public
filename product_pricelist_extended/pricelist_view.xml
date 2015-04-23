@@ -23,6 +23,7 @@
                 				<field name="product_id" on_change="product_id_change(product_id)" select="1"/>
 	                    		<field name="product_tmpl_id" select="1"/>
 	                    		<field name="categ_id" select="1"/>
+                                <field name="price_categ" select="1" />
 							<separator string="Multiple Match" colspan="5" />
 	                        	<field name="tmpl_ids" widget="many2many_tags" string="Product Templates"/>
 	                        	<field name="product_ids" mode="tree" colspan="5" widget="many2many">
@@ -33,6 +34,10 @@
 	                        	</field>
 	                        	
  						</group>
+                    <group col="4" string="Price Computation">
+                        <field name="base"/>
+                        <field name="base_pricelist_id" attrs="{'invisible':[('base', '!=', -1)],'required': [('base','=', -1)], 'readonly': [('base','!=', -1)]}"/>
+                    </group>
                      <group col="6" colspan="5">
                         <label string="New Price ="/>
                         <label string="Base Price"/>

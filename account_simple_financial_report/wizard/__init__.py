@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
-#    OpenERP, Open Source Management Solution - module extension
-#    Copyright (C) 2010- Graeme Gellatly O4SB (<http://openforsmallbusiness.co.nz>).
-#    Copyright (C) 2004-2010 Tiny SPRL (<http://tiny.be>).
+# OpenERP / Odoo, Open Source Management Solution - module extension
+#    Copyright (C) 2014- Ursa Information Systems (<http://ursainfosystems.com>).
+#    Author Graeme Gellatly
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -20,7 +20,4 @@
 #
 ##############################################################################
 
-import report
-import wizard
-
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
+from . import account_financial_report

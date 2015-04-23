@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+     <data>
+
+        <record id="simple_financial_report_view" model="ir.ui.view">
+            <field name="name">Balance Sheet</field>
+            <field name="model">accounting.report</field>
+            <field name="arch" type="xml">
+                <form string="Report Options" version="7.0">
+                <group col="4" attrs="{'invisible':[('adv_options', '=', False)]}">
+                   <field name="chart_account_id" widget='selection' on_change="onchange_chart_id(chart_account_id, context)"/>
+                   <field name="company_id" invisible="1"/>
+                   <field name="fiscalyear_id" domain="[('company_id','=',company_id)]"/>
+                   <field name="target_move"/>
+                   <field name="account_report_id" domain="[('parent_id','=',False)]"/>
+                   <field name="enable_filter"/>
+                   <field name="debit_credit" attrs="{'invisible': [('enable_filter','=',True)]}"/>
+                </group>
+                    <group invisible="context.get('as_of', 0)" attrs="{'invisible':[('adv_options', '=', False)]}">
+                        <field name="filter" on_change="onchange_filter(filter, fiscalyear_id, context)" />
+                    </group>
+                    <group string="Dates"  attrs="{'invisible':[('filter', '!=', 'filter_date')], 'required':[('filter', '=', 'filter_date')]}">
+                            <field name="date_from" invisible="context.get('as_of', 0)" />
+                            <field name="date_to" />
+                        </group>
+                        <group string="Periods" attrs="{'invisible':[('filter','!=','filter_period')], 'required':[('filter', '=', 'filter_period')]}">
+                            <field name="period_from" domain="[('fiscalyear_id', '=', fiscalyear_id)]" invisible="context.get('as_of', 0)" />
+                            <field name="period_to" domain="[('fiscalyear_id', '=', fiscalyear_id)]"/>
+                        </group>
+                <notebook tabpos="up" colspan="4" attrs="{'invisible':[('adv_options', '=', False)]}" >
+                     <page string="Comparison" attrs="{'invisible': [('enable_filter','=',False)]}">
+                        <group>
+                            <field name="label_filter" attrs="{'required': [('enable_filter', '=', True)]}"/>
+                            <field name="fiscalyear_id_cmp"/><newline/>
+                            <field name="filter_cmp"/>
+                        </group>
+                        <group string="Dates" attrs="{'invisible':[('filter_cmp', '!=', 'filter_date')]}">
+                            <field name="date_from_cmp" attrs="{'required':[('filter_cmp', '=', 'filter_date')]}"/>
+                            <field name="date_to_cmp" attrs="{'required':[('filter_cmp', '=', 'filter_date')]}"/>
+                        </group>
+                        <group string="Periods" attrs="{'invisible':[('filter_cmp', '!=', 'filter_period')]}">
+                            <field name="period_from_cmp" domain="[('fiscalyear_id', '=', fiscalyear_id_cmp)]" attrs="{'required':[('filter_cmp', '=', 'filter_period')]}"/>
+                            <field name="period_to_cmp" domain="[('fiscalyear_id', '=', fiscalyear_id_cmp)]" attrs="{'required':[('filter_cmp', '=', 'filter_period')]}"/>
+                        </group>
+                   </page>
+                </notebook>
+                <footer>
+                    <button name="check_report" string="Print" type="object" default_focus="1" class="oe_highlight"/>
+                    or
+                    <button string="Cancel" class="oe_link" special="cancel" />
+                    <label string="       " />
+
+                    <field name="adv_options" />
+                    <label for="adv_options" />
+                </footer>
+            </form>
+            </field>
+        </record>
+
+
+        <record id="account.action_account_report_bs" model="ir.actions.act_window">
+             <field name="name">Balance Sheet</field>
+             <field name="res_model">accounting.report</field>
+             <field name="type">ir.actions.act_window</field>
+             <field name="view_type">form</field>
+             <field name="view_mode">form</field>
+             <field name="view_id" ref="simple_financial_report_view"/>
+             <field name="target">new</field>
+             <field name="context" eval="{'default_account_report_id':ref('account.account_financial_report_balancesheet0'),
+             'default_fiscalyear_id': False, 'default_filter': 'filter_date', 'as_of': 1}"/>
+        </record>
+
+        <record id="account.action_account_report_pl" model="ir.actions.act_window">
+             <field name="name">Profit and Loss</field>
+             <field name="res_model">accounting.report</field>
+             <field name="type">ir.actions.act_window</field>
+             <field name="view_type">form</field>
+             <field name="view_mode">form</field>
+             <field name="view_id" ref="simple_financial_report_view"/>
+             <field name="target">new</field>
+             <field name="context" eval="{'default_account_report_id':ref('account.account_financial_report_profitandloss0'), 'default_filter': 'filter_date'}"/>
+        </record>
+
+
+    </data>
+</openerp>

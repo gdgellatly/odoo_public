@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
-#    OpenERP, Open Source Management Solution - module extension
-#    Copyright (C) 2010- Graeme Gellatly - O4SB (<http://openforsmallbusiness.co.nz>).
-#    Copyright (C) 2004-2010 Tiny SPRL (<http://tiny.be>).
+# OpenERP / Odoo, Open Source Management Solution - module extension
+#    Copyright (C) 2014- O4SB (<http://openforsmallbusiness.co.nz>).
+#    Author Graeme Gellatly <g@o4sb.com>
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -20,6 +20,17 @@
 #
 ##############################################################################
 
+from openerp.osv import orm, fields
 
-import parser
+
+class SaleOrder(orm.Model):
+    _inherit = 'sale.order'
+
+    _columns = {
+        'quote': fields.boolean(string='Quote')
+    }
+
+    _defaults = {
+        'quote': lambda s, cr, u, ctx: ctx and ctx.get('quote', False)
+    }
 

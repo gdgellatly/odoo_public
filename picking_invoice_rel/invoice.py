@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-##############################################################################
+# #############################################################################
 #
 #    OpenERP, Open Source Management Solution
 #    Copyright (C) 2004-2011 Tiny SPRL (<http://tiny.be>).
@@ -19,37 +19,35 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from osv import fields, osv
+from osv import fields, orm
 
-class account_invoice(osv.osv):
+
+class AccountInvoice(orm.Model):
     _inherit = "account.invoice"
 
-# FIXME -this is not used, because info is in account_invoice.name
-    def _client_order_refs(self, cr, uid, ids, field_name, arg, context=None):
-         result = {}
-         for inv in self.browse(cr, uid, ids, context):
-            client_ref = '' 
-            for ref in inv.sale_order_ids:
-               if ref.client_order_ref:
-                   if client_ref:
-                       client_ref +='; '
-                   client_ref += ref.client_order_ref
-            result[inv.id] = client_ref
-         return result
-
-
     _columns = {
-        'picking_ids': fields.many2many('stock.picking', 'picking_invoice_rel', 'invoice_id', 'picking_id', 'Pickings' ),
-        'sale_order_ids': fields.many2many('sale.order', 'sale_order_invoice_rel', 'invoice_id', 'order_id', 'Sale Orders', readonly=True, help="This is the list of sale orders linked to this invoice. "),
-        'client_order_refs' : fields.function(_client_order_refs, method=True, string="Client Sale Orders Ref", type='char'),
+        'picking_ids': fields.many2many('stock.picking', 'picking_invoice_rel', 'invoice_id', 'picking_id', 'Pickings'),
+        'sale_order_ids': fields.many2many('sale.order', 'sale_order_invoice_rel', 'invoice_id', 'order_id',
+                                           'Sale Orders', readonly=True,
+                                           help="This is the list of sale orders linked to this invoice. "),
     }
+
     def copy(self, cr, uid, id, default=None, context=None):
+        """
+
+        :param cr:
+        :param uid:
+        :param id:
+        :param default:
+        :param context:
+        :return:
+        """
         default = default or {}
         default.update({
-            'picking_ids':[],
-            'sale_order_ids':[],
-            })
-        return super(account_invoice, self).copy(cr, uid, id, default, context)
+            'picking_ids': [],
+            'sale_order_ids': [],
+        })
+        return super(AccountInvoice, self).copy(
+            cr, uid, id, default=default, context=context)
                             
-account_invoice()
 
