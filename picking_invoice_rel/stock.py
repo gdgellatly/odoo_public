@@ -48,7 +48,7 @@ where p.name = split_part(i.origin,':',1) and (p.id,i.id) not in (select picking
         invoice_ids = res.values()[0]
         if not isinstance(invoice_ids, list):
             invoice_ids = [invoice_ids]
-        self.write(cr, uid, picking_id, {'invoice_ids': [(6, 0, invoice_ids )]}, context=context)
+        self.write(cr, uid, picking_id, {'invoice_ids': [(4, inv_id) for inv_id in invoice_ids]}, context=context)
         return res
 
     def copy(self, cr, uid, id, default=None, context=None):
