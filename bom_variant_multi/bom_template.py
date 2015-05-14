@@ -379,6 +379,19 @@ class BomTemplate(orm.Model):
 class MrpProduction(orm.Model):
     _inherit = 'mrp.production'
 
+    def _prepare_lines(self, cr, uid, production,
+                       properties=None, context=None):
+        if context is None:
+            context = {}
+
+        if properties is None:
+            properties = []
+
+        context.update({'product_id': production.product_id.id,
+                        'prior_product_id': production.product_id.id})
+        return super(MrpProduction, self)._prepare_lines(
+            cr, uid, production, properties=properties, context=context)
+
     def _action_compute_lines(self, cr, uid, ids, properties=None,
                               context=None):
         """ Computes bills of material of a product.
