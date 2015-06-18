@@ -113,6 +113,20 @@ class BomDimensionMap(orm.Model):
         ),
     }
 
+    def copy(self, cr, uid, id, default=None, context=None):
+        if default is None:
+            default = {}
+        default.update({'bom_tmpl_id': False})
+        return super(BomDimensionMap, self).copy(
+            cr, uid, id, default=default, context=context)
+
+    def copy_data(self, cr, uid, id, default=None, context=None):
+        if default is None:
+            default = {}
+        default.update({'bom_tmpl_id': False})
+        return super(BomDimensionMap, self).copy(
+            cr, uid, id, default=default, context=context)
+
 
 class BomTemplate(orm.Model):
     """Implements BOM Template"""
