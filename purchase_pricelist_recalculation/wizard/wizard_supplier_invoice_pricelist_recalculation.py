@@ -37,50 +37,56 @@ class InvoiceRepriceWizard(orm.TransientModel):
         """Iterates over invoices lines and calculates the price based on
         the new pricelist"""
         wiz = self.browse(cr, uid, ids, context)[0]
-        inv_line_pool = self.pool.get('account.invoice.line')
-        inv_pool = self.pool.get('account.invoice')
+        inv_pool = self.pool['account.invoice']
+
         pricelist_id = wiz.pricelist_id.id
         invoices = inv_pool.browse(cr, uid, context['active_ids'], context)
         partner_id = invoices[0].partner_id.id
-        date_invoice = invoices[0].date_invoice or fields.date.today()
 
         if pricelist_id and inv_pool.search(
                 cr, uid,
                 [('id', 'in', context['active_ids']),
                  ('partner_id', '!=', partner_id)]):
-            raise orm.except_orm(_('Warning'),
-                                 _('For your own safety this function only works'
-                                   ' with invoices from a single supplier when'
-                                   ' a pricelist is selected!'))
+            raise orm.except_orm(
+                _('Warning'),
+                _('For your own safety this function only works'
+                  ' with invoices from a single supplier when'
+                  ' a pricelist is selected!'))
         if inv_pool.search(cr, uid, [('id', 'in', context['active_ids']),
                                      ('state', '!=', 'draft')]):
-            raise orm.except_orm(_('Warning'),
-                                 _('Pricing cannot be changed! '
-                                   'Make sure all invoices are in Draft state!'))
+            raise orm.except_orm(
+                _('Warning'),
+                _('Pricing cannot be changed! '
+                  'Make sure all invoices are in Draft state!'))
         if pricelist_id:
-            partner_pricelist = {partner_id: pricelist_id}
+            part_plist = {partner_id: pricelist_id}
         else:
             partner_ids = list(set([x.partner_id.id for x in invoices]))
-            partner_pricelist = {x.id: x.property_product_pricelist_purchase.id for x in
-                                 self.pool.get('res.partner').browse(cr, uid, partner_ids)}
+            part_plist = {
+                x.id: x.property_product_pricelist_purchase.id for x in
+                self.pool['res.partner'].browse(cr, uid, partner_ids)
+                }
         calls_to_make = {}
         for inv in invoices:
-            pricelist_id = partner_pricelist.get(inv.partner_id.id)
+            pricelist_id = part_plist.get(inv.partner_id.id)
             if pricelist_id not in calls_to_make:
                 calls_to_make[pricelist_id] = []
             calls_to_make[pricelist_id].extend(
-                [(x.product_id.id, wiz.check_qty_breaks and x.quantity or 1, False) for x in inv.invoice_line if
+                [(x.product_id.id, wiz.check_qty_breaks and
+                  x.quantity or 1, False) for x in inv.invoice_line if
                  x.product_id])
 
         prices = {}
-        price_func = self.pool.get('product.pricelist').price_get_multi
-        for pricelist, args in calls_to_make.items():
+        price_func = self.pool['product.pricelist'].price_get_multi
+        for part_plist, args in calls_to_make.items():
             args = list(set(args))
-            prices.update(price_func(cr, uid, [pricelist], args))
-        [line.write({'price_unit': prices[line.product_id.id][partner_pricelist[inv.partner_id.id]] or line.price_unit})
+            prices.update(price_func(cr, uid, [part_plist], args))
+        [line.write({
+            'price_unit':
+                line.product_id and
+                prices[line.product_id.id][part_plist[inv.partner_id.id]] or
+                line.price_unit})
          for inv in invoices for line in inv.invoice_line]
 
         inv_pool.button_compute(cr, uid, context['active_ids'])
         return {}
-
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
