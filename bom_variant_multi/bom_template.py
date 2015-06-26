@@ -20,6 +20,8 @@
 ##############################################################################
 """bom_variant_multi Openerp Module"""
 
+from ast import literal_eval
+
 from openerp.osv import orm, fields
 from openerp.tools.translate import _
 
@@ -107,6 +109,15 @@ class BomDimensionMap(orm.Model):
             'Match Condition', size=256,
             help='Domain Expression to select which product should'
                  ' be used, expressed on the product option \n'
+                 'The base variable is available which is the '
+                 'selected products dimension option'
+                 'e.g. [("name", "=", base.name)]'
+        ),
+        'default_opt': fields.char(
+            'Default Condition', size=256,
+            help='Domain Expression to select a default product if no'
+                 'matching product found, '
+                 ' expressed on the product option \n'
                  'The base variable is available which is the '
                  'selected products dimension option'
                  'e.g. [("name", "=", base.name)]'
@@ -258,7 +269,7 @@ class BomTemplate(orm.Model):
             product = bom.product_id
 
         if bom.match_condition and not prod_obj.search(
-                cr, uid, eval(bom.match_condition) + [('id', '=', product.id)]):
+                cr, uid, literal_eval(bom.match_condition) + [('id', '=', product.id)]):
             return [], []
         if bom.adj_weight:
             factor = (product.weight or 1.0) * factor
@@ -295,9 +306,15 @@ class BomTemplate(orm.Model):
                     # noinspection PyUnusedLocal
                     base = dim_option_obj.browse(cr, uid, base_option)[0]
                     search_option_id = dim_option_obj.search(
-                        cr, uid, eval(dim_map.match_opt_condition) +
+                        cr, uid, literal_eval(dim_map.match_opt_condition) +
                         [('dimension_id', '=', dim_map.mapped_dimension_type.id)]
                     )
+                    if not search_option_id and dim_map.default_opt:
+                        search_option_id = dim_option_obj.search(
+                            cr, uid, literal_eval(dim_map.default_opt) +
+                            [('dimension_id', '=', dim_map.mapped_dimension_type.id)]
+                        )
+
                 else:
                     raise NotImplementedError
                 # only one option should match for each map.

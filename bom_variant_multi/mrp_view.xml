@@ -45,6 +45,7 @@
                     <field name="base_dimension_type" />
                     <field name="mapped_dimension_type" />
                     <field name="match_opt_condition" />
+                    <field name="default_opt" />
                 </tree>
             </field>
         </record>
@@ -62,6 +63,7 @@
                         'required': [('mapping_type', '=', 'one2diff')]}" />
                     <field name="match_opt_condition" attrs="{'invisible': [('mapping_type', '=', 'one2one')],
                         'required': [('mapping_type', '=', 'one2diff')]}" />
+                    <field name="default_opt" attrs="{'invisible': [('mapping_type', '=', 'one2one')]}" />
                 </form>
             </field>
         </record>
