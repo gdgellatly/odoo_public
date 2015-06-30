@@ -78,9 +78,9 @@ class InvoiceRepriceWizard(orm.TransientModel):
 
         prices = {}
         price_func = self.pool['product.pricelist'].price_get_multi
-        for part_plist, args in calls_to_make.items():
+        for pricelist, args in calls_to_make.items():
             args = list(set(args))
-            prices.update(price_func(cr, uid, [part_plist], args))
+            prices.update(price_func(cr, uid, [pricelist], args))
         [line.write({
             'price_unit':
                 line.product_id and
