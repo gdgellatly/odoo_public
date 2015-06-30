@@ -268,7 +268,7 @@ class BomTemplate(orm.Model):
             product = bom.product_id
 
         if bom.match_condition and not prod_obj.search(
-                cr, uid, safe_eval(bom.match_condition, {}, {'bom': bom}) +
+                cr, uid, eval(bom.match_condition) +
                         [('id', '=', product.id)]):
             return [], []
         if bom.adj_weight:
@@ -306,12 +306,12 @@ class BomTemplate(orm.Model):
                     # noinspection PyUnusedLocal
                     base = dim_option_obj.browse(cr, uid, base_option)[0]
                     search_option_id = dim_option_obj.search(
-                        cr, uid, safe_eval(dim_map.match_opt_condition, {}, {'base': base}) +
+                        cr, uid, eval(dim_map.match_opt_condition) +
                         [('dimension_id', '=', dim_map.mapped_dimension_type.id)]
                     )
                     if not search_option_id and dim_map.default_opt:
                         search_option_id = dim_option_obj.search(
-                            cr, uid, safe_eval(dim_map.default_opt, {}, {'base': base}) +
+                            cr, uid, eval(dim_map.default_opt) +
                             [('dimension_id', '=', dim_map.mapped_dimension_type.id)]
                         )
 
