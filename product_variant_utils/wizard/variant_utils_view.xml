@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record model="ir.ui.view" id="variant_merge_wizard_view">
+            <field name="name">Merge Variant Dimensions</field>
+            <field name="model">dimension.merge</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Merge Dimensions" version="7.0">
+                    <group>
+                        <field name="dimension_id"/>
+                        <field name="del_option" domain="[('dimension_id', '=', dimension_id)]"/>
+                        <field name="keep_option" domain="[('dimension_id', '=', dimension_id)]"/>
+                    </group>
+                        <group>
+                            <div>
+                                <button icon="gtk-cancel" special="cancel" string="Close"/>
+                                <button name="do_merge" string="Merge Dimensions" type="object"/>
+                            </div>
+                        </group>
+                </form>
+            </field>
+        </record>
+
+        <act_window
+            id="action_variant_merge_view"
+            name="Merge Variant Dimensions"
+            view_mode="form"
+            view_type="form"
+            src_model="product.variant.dimension.type"
+            res_model="dimension.merge"
+            target="new"	/>
+    </data>
+</openerp>
