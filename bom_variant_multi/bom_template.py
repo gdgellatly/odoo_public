@@ -134,7 +134,7 @@ class BomDimensionMap(orm.Model):
         if default is None:
             default = {}
         default.update({'bom_tmpl_id': False})
-        return super(BomDimensionMap, self).copy(
+        return super(BomDimensionMap, self).copy_data(
             cr, uid, id, default=default, context=context)
 
 
