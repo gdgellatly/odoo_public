@@ -381,6 +381,11 @@ class ProductTemplate(orm.Model):
     def copy(self, cr, uid, id, default=None, context=None):
         if default is None:
             default = {}
+        template = self.browse(cr, uid, id, context=context)
+        if not template.is_multi_variants:
+            raise orm.except_orm(
+                _('Prohibited'),
+                _('Cannot duplicate single product templates'))
         default = default.copy()
         default.update({'variant_ids': False})
         return super(ProductTemplate, self).copy(

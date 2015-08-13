@@ -363,9 +363,12 @@ class ProductProduct(orm.Model):
     def copy(self, cr, uid, id, default=None, context=None):
         if default is None:
             default = {}
-        default = default.copy()
-        default.update({'variant_ids': False, 'variant_code': False})
+        product = self.browse(cr, uid, id, context=context)
+        if product.product_tmpl_id.is_multi_variants:
+            raise orm.except_orm(_('Prohibited'),
+                                 _('Cannot duplicate templated products'))
         return super(ProductProduct, self).copy(cr, uid, id, default, context)
+
 
     def unlink(self, cr, uid, ids, context=None):
         if not context:
