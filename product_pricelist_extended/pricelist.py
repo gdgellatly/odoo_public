@@ -235,7 +235,7 @@ class ProductPricelist(orm.Model):
                         # code commented as it is plainly wrong - fields also hidden in view
                         # price_limit = price
                         price *= 1.0 + (res['price_discount'] or 0.0)
-                        if res.get('price_round'):
+                        if res.get('price_round') and not context.get('no_round'):
                             price = rounding(price, res['price_round'])
                         price += (res['price_surcharge'] or 0.0)
                         # code commented as it is plainly wrong - fields also hidden in view
