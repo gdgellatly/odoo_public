@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record id="voucher_matching_wizard_view_form" model="ir.ui.view">
+            <field name="name">voucher.matching.wizard.form</field>
+            <field name="model">voucher.matching.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Payment Allocation">
+                    <group>
+                        <group name="header">
+                            <field name="name" readonly="1"/>
+                            <field name="partner_id" invisible="1"/>
+                            <field name="type" invisible="1"/>
+                            <field name="strategy"/>
+                        </group>
+                        <group name="totals">
+                            <field name="payment_amount" readonly="1"/>
+                            <!--<field name="invoice_total" />-->
+                            <!--<field name="refund_total" />-->
+                            <!--<field name="amount_remaining" />-->
+                        </group>
+                    </group>
+                    <group name="date_strategy">
+                        <field name="date_type" invisible="[('strategy', '!=', 'date')]"/>
+                        <field name="date_from" invisible="[('strategy', '!=', 'date')]"/>
+                        <field name="date_to" invisible="[('strategy', '!=', 'date')]"/>
+                        <field name="period_ids" widget="many2many_tags"
+                               invisible="[('strategy', '!=', 'period')]"/>
+                        <field name="invoice_ids" widget="many2many_tags"
+                               invisible="[('strategy', '!=', 'selected')]"/>
+                    </group>
+                    <group name="exclusions">
+                        <field name="exclude_invoice_ids" domain="type == 'receivable' and
+                        [('id','in', [x.move_line_id for x in line_dr_ids])] or [('id','in', [x.move_line_id for x in line_cr_ids])]"/>
+                        <field name="refund_ids" domain="type == 'payable' and
+                        [('id','in', [x.move_line_id for x in line_dr_ids])] or [('id','in', [x.move_line_id for x in line_cr_ids])]"
+                    </group>
+                    <group name="voucher_lines" invisible="1">
+                        <field name="line_dr_ids"/>
+                        <field name="line_cr_ids"/>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_voucher_matching_wizard" model="ir.actions.act_window">
+            <field name="name">Smart Payment Matching</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">voucher.matching.wizard</field>
+            <field name="view_mode">form</field>
+        </record>
+
+
+        <record model="ir.ui.view" id="view_vendor_payment_form_inherit">
+            <field name="name">account.voucher.payment.form</field>
+            <field name="model">account.voucher</field>
+            <field name="inherit_id" ref="account_voucher.view_vendor_payment_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet/group/group/field[@name='date']" position="before">
+                    <button string="Smart Matching" type="action"
+                            name="%(account_voucher_matching_strategy.action_voucher_matching_wizard"/>
+                </xpath>
+            </field>
+        </record>
+
+
+    </data>
+</openerp>
