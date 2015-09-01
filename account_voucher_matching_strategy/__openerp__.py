@@ -25,12 +25,13 @@
     'category': 'Accounting',
     'author': 'Graeme Gellatly - O4SB',
     'website': 'http://www.openforsmallbusiness.co.nz',
-    'depends': ['base', 'account_voucher', 'account_voucher_no_auto_lines'],
+    'depends': ['base', 'account_voucher'],
     "description": """
     This module provides for advanced matching strategies to quickly reconcile payments
     with their remittances.
 
     Strategies included are:
+
     - Off the back
     - Selected Periods
     - Selected Invoices

@@ -5,40 +5,79 @@
             <field name="name">voucher.matching.wizard.form</field>
             <field name="model">voucher.matching.wizard</field>
             <field name="arch" type="xml">
-                <form string="Payment Allocation">
+                <form string="Payment Allocation" version="7.0">
                     <group>
                         <group name="header">
-                            <field name="name" readonly="1"/>
+                            <field name="name" invisible="1"/>
                             <field name="partner_id" invisible="1"/>
                             <field name="type" invisible="1"/>
+                            <field name="company_id" invisible="1"/>
                             <field name="strategy"/>
                         </group>
                         <group name="totals">
-                            <field name="payment_amount" readonly="1"/>
-                            <!--<field name="invoice_total" />-->
-                            <!--<field name="refund_total" />-->
-                            <!--<field name="amount_remaining" />-->
+                            <field name="amount_payment" readonly="1"/>
+                            <field name="no_partial"/>
                         </group>
+
                     </group>
-                    <group name="date_strategy">
-                        <field name="date_type" invisible="[('strategy', '!=', 'date')]"/>
-                        <field name="date_from" invisible="[('strategy', '!=', 'date')]"/>
-                        <field name="date_to" invisible="[('strategy', '!=', 'date')]"/>
+                    <group name="date_strategy"
+                           attrs="{'invisible': [('strategy', '!=', 'date')], 'required': [('strategy', '=', 'date')]}">
+                        <field name="date_type"
+                               attrs="{'invisible': [('strategy', '!=', 'date')], 'required': [('strategy', '=', 'date')]}"/>
+                        <label for="date_from"/>
+                        <div>
+                            <field name="date_from" class="oe_inline"
+                                   on_change="onchange_date(date_type, date_from, date_to)"
+                                   attrs="{'invisible': [('strategy', '!=', 'date')], 'required': [('strategy', '=', 'date')]}"/>
+                            -
+                            <field name="date_to" class="oe_inline"
+                                   attrs="{'invisible': [('strategy', '!=', 'date')], 'required': [('strategy', '=', 'date')]}"/>
+                        </div>
+                    </group>
+                    <group name="strategy">
                         <field name="period_ids" widget="many2many_tags"
-                               invisible="[('strategy', '!=', 'period')]"/>
-                        <field name="invoice_ids" widget="many2many_tags"
-                               invisible="[('strategy', '!=', 'selected')]"/>
+                               domain="[('company_id', '=', company_id)]"
+                               attrs="{'invisible': [('strategy', '!=', 'period')], 'required': [('strategy', '=', 'period')]}"/>
+                        <field name="inv_ids"
+                               attrs="{'invisible': [('strategy', '!=', 'selected')], 'required': [('strategy', '=', 'selected')]}"
+                               domain="[('voucher_id','=', name), ('type', '=', type == 'payment' and 'dr' or 'cr')]">
+                            <tree>
+                                <field name="date_original"/>
+                                <field name="move_line_id"/>
+                                <field name="date_due"/>
+                                <field name="amount_original"/>
+                                <field name="amount_unreconciled" sum="Total Selected"/>
+                            </tree>
+                        </field>
                     </group>
                     <group name="exclusions">
-                        <field name="exclude_invoice_ids" domain="type == 'receivable' and
-                        [('id','in', [x.move_line_id for x in line_dr_ids])] or [('id','in', [x.move_line_id for x in line_cr_ids])]"/>
-                        <field name="refund_ids" domain="type == 'payable' and
-                        [('id','in', [x.move_line_id for x in line_dr_ids])] or [('id','in', [x.move_line_id for x in line_cr_ids])]"
+                        <field name="exclude_inv_ids"
+                               domain="[('voucher_id','=', name), ('type', '=', type == 'payment' and 'dr' or 'cr')]"
+                               attrs="{'invisible': [('strategy', '=', 'selected')]}">
+                            <tree>
+                                <field name="date_original"/>
+                                <field name="move_line_id"/>
+                                <field name="date_due"/>
+                                <field name="amount_original"/>
+                                <field name="amount_unreconciled" sum="Total Excluded"/>
+                            </tree>
+                        </field>
+                        <field name="refund_ids"
+                               domain="[('voucher_id','=', name), ('type', '=', type == 'payment' and 'cr' or 'dr')]">
+                            <tree>
+                                <field name="date_original"/>
+                                <field name="move_line_id"/>
+                                <field name="date_due"/>
+                                <field name="amount_original"/>
+                                <field name="amount_unreconciled" sum="Total Credits"/>
+                            </tree>
+                        </field>
                     </group>
-                    <group name="voucher_lines" invisible="1">
-                        <field name="line_dr_ids"/>
-                        <field name="line_cr_ids"/>
-                    </group>
+                    <footer>
+                        <button type="object" name="apply_strategy_and_close" string="Apply" class="oe_highlight"/>
+                        or
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
                 </form>
             </field>
         </record>
@@ -48,6 +87,7 @@
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">voucher.matching.wizard</field>
             <field name="view_mode">form</field>
+            <field name="target">new</field>
         </record>
 
 
@@ -56,10 +96,118 @@
             <field name="model">account.voucher</field>
             <field name="inherit_id" ref="account_voucher.view_vendor_payment_form"/>
             <field name="arch" type="xml">
-                <xpath expr="//sheet/group/group/field[@name='date']" position="before">
-                    <button string="Smart Matching" type="action"
-                            name="%(account_voucher_matching_strategy.action_voucher_matching_wizard"/>
+                <xpath expr="//header/button[@name='proforma_voucher']" position="before">
+                    <button string="Apply" type="action" states="draft" class="oe_highlight"
+                            name="%(account_voucher_matching_strategy.action_voucher_matching_wizard)d"
+                            context="{'active_model': 'account.voucher', 'active_id': active_id}"/>
+
                 </xpath>
+                <xpath expr="//notebook/page/group" position="replace"/>
+                <xpath expr="//notebook" position="before">
+                    <group col="3">
+                        <group>
+                            <field name="narration" colspan="2" nolabel="1"/>
+                        </group>
+                        <group col="4" attrs="{'invisible':[('is_multi_currency','=',False)]}">
+                            <field name="is_multi_currency" invisible="1"/>
+                            <label for="payment_rate" colspan="1"/>
+                            <div>
+                                <field name="payment_rate" required="1" class="oe_inline"
+                                       on_change="onchange_amount(amount, payment_rate, partner_id, journal_id, currency_id, type, date, payment_rate_currency_id, company_id, context)"/>
+                                <field name="payment_rate_currency_id" class="oe_inline"
+                                       on_change="onchange_payment_rate_currency(currency_id, payment_rate, payment_rate_currency_id, date, amount, company_id, context)"
+                                       groups="base.group_multi_currency"/>
+                            </div>
+                            <field name="currency_help_label" colspan="2" nolabel="1" class="oe_grey"/>
+                            <field name="paid_amount_in_company_currency" colspan="4" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="writeoff_amount" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"/>
+                            <field name="payment_option" required="1"
+                                   attrs="{'invisible':[('writeoff_amount','=',0)]}"/>
+                            <field name="writeoff_acc_id"
+                                   attrs="{'invisible':['|', ('payment_option','!=','with_writeoff'), ('writeoff_amount','=',0)], 'required':[('payment_option','=','with_writeoff')]}"
+                                   domain="[('type','=','other')]"/>
+                            <field name="comment"
+                                   attrs="{'invisible':['|', ('payment_option','!=','with_writeoff'), ('writeoff_amount','=',0)]}"/>
+                            <field name="analytic_id"
+                                   groups="analytic.group_analytic_accounting"
+                                   attrs="{'invisible':['|', ('payment_option','!=','with_writeoff'), ('writeoff_amount','=',0)]}"/>
+                        </group>
+                    </group>
+                </xpath>
+                <xpath expr="//field[@name='journal_id']" position="after">
+                    <field name="no_recompute"/>
+                    <field name="delete_unpaid"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="view_vendor_receipt_form_inherit">
+            <field name="name">account.voucher.receipt.form</field>
+            <field name="model">account.voucher</field>
+            <field name="inherit_id" ref="account_voucher.view_vendor_receipt_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header/button[@name='proforma_voucher']" position="before">
+                    <button string="Apply" type="action" states="draft" class="oe_highlight"
+                            name="%(account_voucher_matching_strategy.action_voucher_matching_wizard)d"
+                            context="{'active_model': 'account.voucher', 'active_id': active_id}"/>
+
+                </xpath>
+                <xpath expr="//notebook/page/group" position="replace"/>
+                <xpath expr="//notebook" position="before">
+                    <group col="3">
+                        <group>
+                            <field name="narration" colspan="2" nolabel="1"/>
+                        </group>
+                        <group col="4" attrs="{'invisible':[('is_multi_currency','=',False)]}">
+                            <field name="is_multi_currency" invisible="1"/>
+                            <label for="payment_rate" colspan="1"/>
+                            <div>
+                                <field name="payment_rate" required="1" class="oe_inline"
+                                       on_change="onchange_amount(amount, payment_rate, partner_id, journal_id, currency_id, type, date, payment_rate_currency_id, company_id, context)"/>
+                                <field name="payment_rate_currency_id" class="oe_inline"
+                                       on_change="onchange_payment_rate_currency(currency_id, payment_rate, payment_rate_currency_id, date, amount, company_id, context)"
+                                       groups="base.group_multi_currency"/>
+                            </div>
+                            <field name="currency_help_label" colspan="2" nolabel="1" class="oe_grey"/>
+                            <field name="paid_amount_in_company_currency" colspan="4" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="writeoff_amount" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"/>
+                            <field name="payment_option" required="1"
+                                   attrs="{'invisible':[('writeoff_amount','=',0)]}"/>
+                            <field name="writeoff_acc_id"
+                                   attrs="{'invisible':['|', ('payment_option','!=','with_writeoff'), ('writeoff_amount','=',0)], 'required':[('payment_option','=','with_writeoff')]}"
+                                   domain="[('type','=','other')]"/>
+                            <field name="comment"
+                                   attrs="{'invisible':['|', ('payment_option','!=','with_writeoff'), ('writeoff_amount','=',0)]}"/>
+                            <field name="analytic_id"
+                                   groups="analytic.group_analytic_accounting"
+                                   attrs="{'invisible':['|', ('payment_option','!=','with_writeoff'), ('writeoff_amount','=',0)]}"/>
+                        </group>
+                    </group>
+                </xpath>
+                <xpath expr="//field[@name='journal_id']" position="after">
+                    <field name="no_recompute"/>
+                    <field name="delete_unpaid"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="account_voucher_line_view_tree" model="ir.ui.view">
+            <field name="name">account.voucher.line.tree</field>
+            <field name="model">account.voucher.line</field>
+            <field name="arch" type="xml">
+                <tree string="Lines">
+                    <field name="date_original"/>
+                    <field name="move_line_id"/>
+                    <field name="date_due"/>
+                    <field name="amount_original"/>
+                    <field name="amount_unreconciled" sum="Total Outstanding"/>
+                </tree>
             </field>
         </record>
 
