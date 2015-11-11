@@ -141,8 +141,8 @@ class ProductProduct(orm.Model):
     def simple_build_product_name(self, cr, uid, products, vals, context=None):
         vals[0].append('name')
         tmpl_name = products[0].product_tmpl_id.name or ''
-        [v.append('%s %s' % (str(tmpl_name),
-                             str(v[vals[0].index('variants')]))) for
+        [v.append(u'%s %s' % (tmpl_name,
+                              v[vals[0].index('variants')])) for
          k, v in vals[1].items()]
         return vals
 
