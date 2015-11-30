@@ -141,6 +141,7 @@ class BomDimensionMap(orm.Model):
 class BomTemplate(orm.Model):
     """Implements BOM Template"""
     _inherit = 'mrp.bom'
+    _order = 'company_id, name'
 
     _columns = {
         'bom_template': fields.boolean(
@@ -201,6 +202,7 @@ class BomTemplate(orm.Model):
         Override product searches to return templates as well.
         """
         prod_obj = self.pool['product.product']
+        company = self.pool['res.users'].browse(cr, user, user, context=context)
         op_map = {'=': 'in', '!=': 'not in', '<>': 'not in',
                   'in': 'in', 'not in': 'not in'}
         #TODO - support between combination of <,<= and >, >=
@@ -229,6 +231,7 @@ class BomTemplate(orm.Model):
                     args = (args[:idx + arg_offset] + extra_args +
                             args[idx + arg_offset:])
                     arg_offset += len(extra_args)
+
         try:
             res = super(BomTemplate, self).search(cr, user, args, offset=offset,
                                                   limit=limit, order=order,
