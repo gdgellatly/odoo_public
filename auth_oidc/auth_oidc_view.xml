@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<openerp>
+    <data>
+        <record model="ir.ui.view" id="view_oidc_provider_form">
+            <field name="name">auth.oidc.provider.form</field>
+            <field name="model">auth.oidc.provider</field>
+            <field name="arch" type="xml">
+                <form string="arch" version="7.0">
+                    <sheet>
+                        <group>
+                            <field name="name" />
+                            <field name="client_id" />
+                            <field name="enabled" />
+                            <field name="body" />
+                            <field name="auth_endpoint" />
+                            <field name="css_class" />
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="view_oidc_provider_list">
+            <field name="name">auth.oidc.provider.list</field>
+            <field name="model">auth.oidc.provider</field>
+            <field name="arch" type="xml">
+                <tree string="arch" version="7.0">
+                    <field name="name" />
+                    <field name="client_id" />
+                    <field name="enabled" />
+                </tree>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="action_oidc_provider">
+            <field name="name">OpenID Connect Providers</field>
+            <field name="res_model">auth.oidc.provider</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="menu_oidc_providers" name="OpenID Connect Providers"
+            parent="base.menu_users" sequence="30"
+            action="action_oidc_provider" groups="base.group_no_one"/>
+    </data>
+</openerp>
