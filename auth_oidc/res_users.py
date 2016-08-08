@@ -113,5 +113,13 @@ class ResUsers(orm.Model):
             res = self.search(cr, SUPERUSER_ID, [('id', '=', uid), ('oidc_id_token', '=', password)])
             if not res:
                 raise
+            
+    def copy(self, cr, uid, id, default=None, context=None):
+        default = dict(default or {})
+        if 'oidc_uid' not in default:
+            default['oidc_uid'] = False
+            default['oidc_provider'] = False
+            default['oidc_token'] = False
+        return super(ResUsers, self).copy(cr, uid, id, default=default, context=context)
 
 #
