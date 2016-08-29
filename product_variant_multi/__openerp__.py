@@ -68,10 +68,11 @@ The dependence to the stock module is weak, it's only there to be able
 enable tracking production lots.
     ''',
     'depends': ['product', 'stock'],
-    'demo_xml': ['demo_data.xml'],
+    'demo_xml': ['demo/demo_data.xml'],
     'data': [
         'security/ir.model.access.csv',
-        'product_view.xml',
+        'views/product_view.xml',
+        'views/product_supplierinfo_view.xml',
     ],
     'application': True,
     'active': False,

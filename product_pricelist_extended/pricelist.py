@@ -149,8 +149,8 @@ class ProductPricelist(orm.Model):
 
             if partner:
                 partner_where = ('base <> -2 OR %s IN '
-                                 '(SELECT name FROM product_supplierinfo WHERE product_tmpl_id = %s) ')
-                partner_args = (partner, product_id)
+                                 '(SELECT name FROM product_supplierinfo WHERE product_id = %s) ')
+                partner_args = (partner, tmpl_id)
             else:
                 partner_where = 'base <> -2 '
                 partner_args = ()
@@ -196,11 +196,10 @@ class ProductPricelist(orm.Model):
                     elif res['base'] == -2:
                         #  this section could be improved by moving the
                         #  queries outside the loop:
-                        where = []
-                        if partner:
-                            where = [('name', '=', partner)]
-                        sinfo = supplierinfo_obj.search(cr, uid,
-                                                        [('product_id', '=', tmpl_id)] + where)
+
+                        sinfo = supplierinfo_obj.get_suppliers(
+                            cr, uid, tmpl_id, partner)
+
                         price = 0.0
                         if sinfo:
                             qty_in_product_uom = qty
@@ -211,14 +210,8 @@ class ProductPricelist(orm.Model):
                                 uom_price_already_computed = True
                                 qty_in_product_uom = product_uom_obj._compute_qty(
                                     cr, uid, product_default_uom, qty, to_uom_id=seller_uom)
-                            cr.execute('SELECT * '
-                                       'FROM pricelist_partnerinfo '
-                                       'WHERE suppinfo_id IN %s'
-                                       'AND min_quantity <= %s '
-                                       'ORDER BY min_quantity DESC LIMIT 1', (tuple(sinfo), qty_in_product_uom,))
-                            res2 = cr.dictfetchone()
-                            if res2:
-                                price = res2['price']
+                            price = supplierinfo_obj.price_query(cr, uid, sinfo, qty_in_product_uom, product_id)
+
                     else:
                         price_type = price_type_obj.browse(cr, uid, int(res['base']))
                         price = product_obj.price_get(

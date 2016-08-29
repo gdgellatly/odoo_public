@@ -13,7 +13,7 @@
     'category': '',
     'author': 'O4SB',
     'website': 'http://www.openforsmallbusiness.co.nz',
-    'depends': ["base", 'product'],
+    'depends': ["base", 'product', 'product_variant_multi'],
     "description": """
     This module implements many2many product ids for pricelist rules and provides
     a report for checking pricelist rules.

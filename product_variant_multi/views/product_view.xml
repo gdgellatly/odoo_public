@@ -446,6 +446,17 @@
                 
             </field>
         </record>
+
+        <record id="view_product_supplier_inherit" model="ir.ui.view">
+            <field name="name">product.normal.supplier.form.inherit</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="purchase.view_product_supplier_inherit"/>
+            <field name="arch" type="xml">
+                <field name="seller_ids" position="attributes" >
+                    <attribute name="context">{'parent_model': active_model, 'parent_model_id': active_id}</attribute>
+                </field>
+            </field>
+        </record>
         
         <record model="ir.ui.view" id="product_variant_multi_form_view">
             <field name="name">product_variant_multi.product.form</field>
@@ -457,6 +468,7 @@
                     <field name="lst_price" />
                     <field name="cost_price" />
                 </field>
+
                 <!-- 				<field name="price_margin" position="replace" /> -->
                 <!-- 				<field name="price_extra" position="replace" />  -->
             </field>
