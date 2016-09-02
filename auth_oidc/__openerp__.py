@@ -35,6 +35,7 @@ TODO: Check authorized public keys
     'depends': ['base', 'web', 'base_setup'],
     'data': [
         'auth_oidc_view.xml',
+        'res_users.xml',
         'security/ir.model.access.csv'
     ],
     'js': ['static/src/js/auth_oidc.js'],

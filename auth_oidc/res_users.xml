@@ -7,12 +7,11 @@
             <field name="type">form</field>
             <field name="inherit_id" ref="base.view_users_form"/>
             <field name="arch" type="xml">
-                <xpath expr="//page[@string='Access Rights']" position="after">
+                <xpath expr="//notebook" position="inside">
                     <page string="Oauth">
                         <group>
-                            <field name="oauth_provider"/>
-                            <field name="oauth_uid"/>
-                            <field name="oauth_access_token"/>
+                            <field name="oidc_provider_id"/>
+                            <field name="oidc_uid"/>
                         </group>
                     </page>
                 </xpath>
