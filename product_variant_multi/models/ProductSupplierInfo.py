@@ -66,14 +66,20 @@ class ProductSupplierinfo(orm.Model):
 
     _columns = {
         'prices': fields.function(
-            _compute_unit_price, string="Prices", type="text")
+            _compute_unit_price, string="Prices", type="text"),
+        'default': fields.boolean(string='Default Price', required=True)
     }
+
+    _defaults = {'default': True}
 
     def get_suppliers(self, cr, uid, tmpl_id, partner):
         where = []
         if partner:
             where = [('name', '=', partner)]
         sinfo = self.search(cr, uid, [('product_id', '=', tmpl_id)] + where)
+        if not sinfo:
+            sinfo = self.search(cr, uid, [('product_id', '=', tmpl_id),
+                                          ('default', '=', True)])
         if not sinfo:
             sinfo = self.search(cr, uid, [('product_id', '=', tmpl_id)])
         return sinfo

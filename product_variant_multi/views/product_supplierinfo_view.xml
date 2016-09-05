@@ -6,6 +6,10 @@
             <field name="model">product.supplierinfo</field>
             <field name="inherit_id" ref="product.product_supplierinfo_form_view" />
             <field name="arch" type="xml">
+                <!--add default here-->
+                <xpath expr="//field[@name='sequence']" position="after" >
+                    <field name="default" />
+                </xpath>
                 <xpath expr="//field[@name='pricelist_ids']" position="replace" >
                     <field name="product_id" invisible="1" />
                     <field groups="product.group_purchase_pricelist" name="pricelist_ids">
@@ -40,6 +44,7 @@
             <field name="arch" type="xml">
                 <xpath expr="/tree/field[@name='min_qty']" position="after">
                     <field name="prices"/>
+                    <field name="default" />
                 </xpath>
             </field>
 </record>
