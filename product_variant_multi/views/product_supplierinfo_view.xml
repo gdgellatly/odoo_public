@@ -9,6 +9,7 @@
                 <!--add default here-->
                 <xpath expr="//field[@name='sequence']" position="after" >
                     <field name="default" />
+                    <field name="warehouse_ids" widget="many2many_tags" />
                 </xpath>
                 <xpath expr="//field[@name='pricelist_ids']" position="replace" >
                     <field name="product_id" invisible="1" />
@@ -20,6 +21,7 @@
                                    domain="[('product_tmpl_id', '=', parent.product_id)]" />
                             <field name="excluded_value_ids" widget="many2many_tags"
                                    domain="[('product_tmpl_id', '=', parent.product_id)]" />
+
                         </tree>
                         <form version="7.0">
                             <group>
@@ -29,6 +31,7 @@
                                    domain="[('product_tmpl_id', '=', parent.product_id)]" />
                                 <field name="excluded_value_ids" widget="many2many_tags"
                                    domain="[('product_tmpl_id', '=', parent.product_id)]" />
+
                             </group>
                         </form>
                     </field>
@@ -45,6 +48,7 @@
                 <xpath expr="/tree/field[@name='min_qty']" position="after">
                     <field name="prices"/>
                     <field name="default" />
+                    <field name="warehouse_ids" widget="many2many_tags" />
                 </xpath>
             </field>
 </record>

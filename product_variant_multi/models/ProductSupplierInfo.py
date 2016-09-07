@@ -67,16 +67,36 @@ class ProductSupplierinfo(orm.Model):
     _columns = {
         'prices': fields.function(
             _compute_unit_price, string="Prices", type="text"),
-        'default': fields.boolean(string='Default Price', required=True)
+        'default': fields.boolean(string='Default Price'),
+        'warehouse_ids': fields.many2many('stock.warehouse',
+            string='Warehouses')
     }
 
-    _defaults = {'default': True}
+    def _get_product_id(self, cr, uid, context=None):
+        if context and 'parent_model' in context:
+            obj = self.pool[context['parent_model']].browse(cr, uid, context['parent_model_id'])
+            if context['parent_model'] == 'product.product':
+                return obj.product_tmpl_id.id
+            else:
+                return obj.id
+        return False
+
+    _defaults = {'default': False,
+                 'product_id': _get_product_id}
 
     def get_suppliers(self, cr, uid, tmpl_id, partner):
         where = []
         if partner:
             where = [('name', '=', partner)]
-        sinfo = self.search(cr, uid, [('product_id', '=', tmpl_id)] + where)
+        sinfo = self.search(cr, uid, [('product_id', '=', tmpl_id),
+                                      ('pricelist_ids', '!=', False)] + where)
+        if not sinfo and partner:
+            p = self.pool['res.partner'].browse(cr, uid, partner)
+            if p.commercial_partner_id:
+                sinfo = self.search(cr, uid,
+                                    [('product_id', '=', tmpl_id),
+                                     ('name', '=', p.commercial_partner_id.id),
+                                     ('pricelist_ids', '!=', False)])
         if not sinfo:
             sinfo = self.search(cr, uid, [('product_id', '=', tmpl_id),
                                           ('default', '=', True)])
@@ -120,6 +140,7 @@ class PricelistPartnerinfo(orm.Model):
             id1='partner_info_id', id2='value_id',
             rel='partner_info_dim_value_exclude',
             string="Exclude"),
+
     }
 
 
@@ -138,3 +159,9 @@ class ProductVariantDimensionValue(orm.Model):
             id1='value_id', id2='partner_info_id',
             string="Don't apply to:")
     }
+
+class StockWarehouse(orm.Model):
+    _inherit = 'stock.warehouse'
+
+    _columns = {'pricelist_ids': fields.many2many(
+        'product.supplierinfo', string='Product Price Records')}

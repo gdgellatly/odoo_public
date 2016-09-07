@@ -227,6 +227,9 @@
                 <xpath expr="//group[@name='status']/field[@name='categ_id']" position="replace" >
                         <field name="company_id" group="base.group_multi_company" />
                 </xpath>
+                <field name="seller_ids" position="attributes">
+                    <attribute name="context">{'parent_model': active_model, 'parent_model_id': active_id}</attribute>
+                </field>
                 <xpath expr="//form/notebook" position="inside">
                     <page string="Variants" attrs="{'invisible':[('is_multi_variants','=',False)]}">
                         <group>

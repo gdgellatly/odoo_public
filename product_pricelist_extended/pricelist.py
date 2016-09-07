@@ -147,13 +147,13 @@ class ProductPricelist(orm.Model):
             else:
                 price_cat_where = '(price_categ IS NULL)'
 
-            if partner:
-                partner_where = ('base <> -2 OR %s IN '
-                                 '(SELECT name FROM product_supplierinfo WHERE product_id = %s) ')
-                partner_args = (partner, tmpl_id)
-            else:
-                partner_where = 'base <> -2 '
-                partner_args = ()
+            # if partner:
+            #     partner_where = ('base <> -2 OR %s IN '
+            #                      '(SELECT name FROM product_supplierinfo WHERE product_id = %s) ')
+            #     partner_args = (partner, tmpl_id)
+            # else:
+            #     partner_where = 'base <> -2 '
+            partner_args = ()
 
             for pricelist_id in pricelist_ids:
                 price = False
@@ -171,7 +171,7 @@ class ProductPricelist(orm.Model):
                     'AND (prod_id IS NULL or prod_id = %s) '
                     'AND (' + categ_where + ' ) '
                     'AND (' + price_cat_where + ') '
-                    'AND (' + partner_where + ') '
+                    # 'AND (' + partner_where + ') '
                     'AND price_version_id = %s '
                     'AND (min_quantity IS NULL OR min_quantity <= %s) '
                     'ORDER BY sequence LIMIT 1',
@@ -204,6 +204,12 @@ class ProductPricelist(orm.Model):
                         if sinfo:
                             qty_in_product_uom = qty
                             product_default_uom = uom
+                            if len(sinfo) > 1 and 'warehouse_id' in context:
+                                sinfo_wh = supplierinfo_obj.search(
+                                    cr, uid, [('id', 'in', sinfo),
+                                              ('warehouse_ids', 'in', [context['warehouse_id']])])
+                                if sinfo_wh:
+                                    sinfo = sinfo_wh
                             supplier = supplierinfo_obj.browse(cr, uid, sinfo, context=context)[0]
                             seller_uom = supplier.product_uom and supplier.product_uom.id or False
                             if seller_uom and product_default_uom and product_default_uom != seller_uom:
