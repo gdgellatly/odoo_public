@@ -26,6 +26,9 @@
             <field name="picking_ids" colspan="4" nolabel="1"/>
           </page>
         </page>
+        <xpath expr="//field[@name='invoice_line']" position="attributes">
+                        <attribute name="context_picking_ids">{'picking_ids': bool(picking_ids)}</attribute>
+                    </xpath>
       </field>
     </record>
 <!-- add invoice sale relation -->
