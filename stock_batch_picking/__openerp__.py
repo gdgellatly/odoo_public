@@ -32,7 +32,7 @@ Not a daily best practise, but certainly useful to deal with historical data, su
     """,
     'author': 'Akretion',
     'website': 'http://www.akretion.com',
-    'depends': ['stock'],
+    'depends': ['stock', 'stock_move_backdating', 'mrp_cutlist'],
     'init_xml': [],
     'update_xml': ['wizard/stock_batch_process_view.xml'],
     'demo_xml': [],

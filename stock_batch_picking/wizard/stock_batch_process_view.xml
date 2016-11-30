@@ -7,6 +7,7 @@
             <field name="type">form</field>
             <field name="arch" type="xml">
               <form string="Bulk Process Picking">
+                    <field name="date_backdating" />
 					<button name="process" string="Process" type="object" icon="terp-gtk-go-back-rtl"/>
              </form>
             </field>
