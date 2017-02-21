@@ -110,18 +110,19 @@ class ProductSupplierinfo(orm.Model):
         # If a dimension_value is present in include the product must have that
         # If a dimension_value is present in exclude the product must not have it
         dim_values = pvdv_obj.search(cr, uid, [('product_ids', 'in', [product_id])])
-        price_records = price_info_obj.search(
-            cr, uid,[('min_quantity', '<=', quantity),
-                     ('suppinfo_id', 'in', ids)],
-            order='min_quantity desc')
-        for price_record in price_info_obj.browse(cr, uid, price_records):
-            if not all([v.id in dim_values for v
-                        in price_record.required_value_ids]):
-                continue
-            if any([v.id in dim_values for v
-                    in price_record.excluded_value_ids]):
-                continue
-            return price_record.price
+        for pk in ids:
+            price_records = price_info_obj.search(
+                cr, uid,[('min_quantity', '<=', quantity),
+                         ('suppinfo_id', '=', pk)],
+                order='min_quantity desc')
+            for price_record in price_info_obj.browse(cr, uid, price_records):
+                if not all([v.id in dim_values for v
+                            in price_record.required_value_ids]):
+                    continue
+                if any([v.id in dim_values for v
+                        in price_record.excluded_value_ids]):
+                    continue
+                return price_record.price
         return 0.00
 
 
