@@ -44,11 +44,10 @@ where p.name = split_part(i.origin,':',1) and (p.id,i.id) not in (select picking
                               group=False, type='out_invoice', context=None):
         res = super(StockPicking, self).action_invoice_create(cr, uid, ids, journal_id,
                                                               group, type, context)
-        picking_id = res.keys()[0]
-        invoice_ids = res.values()[0]
-        if not isinstance(invoice_ids, list):
-            invoice_ids = [invoice_ids]
-        self.write(cr, uid, picking_id, {'invoice_ids': [(4, inv_id) for inv_id in invoice_ids]}, context=context)
+        for picking_id, invoice_ids in res.items():
+            if not isinstance(invoice_ids, list):
+                invoice_ids = [invoice_ids]
+            self.write(cr, uid, picking_id, {'invoice_ids': [(4, inv_id) for inv_id in invoice_ids]}, context=context)
         return res
 
     def copy(self, cr, uid, id, default=None, context=None):
