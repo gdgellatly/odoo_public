@@ -22,12 +22,18 @@
 
 from openerp.osv import orm, fields
 
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 from openerp.tests.common import SingleTransactionCase, TransactionCase
 from openerp import netsvc
 from openerp.tools.float_utils import float_round as round
 
+PRICE_ARGS = dict(min_value=0.01, max_value=1000000.0, allow_nan=False, allow_infinity=False)
+QTY_ARGS = dict(min_value=1, max_value=1000000)
+MAX_EXAMPLES = 20
+
+# TODO: Need to test the case where purchase is at 0.00, expected behaviour, nett effect
+# Should we really be assuming average cost for these moves, what happens later
 
 class TestPurchase(TransactionCase):
     def __init__(self, methodName='runTest'):
@@ -47,6 +53,7 @@ class TestPurchase(TransactionCase):
         self.stock_input_account = self.ref(
             'test_account_anglo_saxon.stk_input')
         self.payables_account = int(partner.property_account_payable.id)
+        self.expense_account = self.ref('account.cos')
 
         self.purchase_defaults = {
             'partner_id': partner.id,
@@ -92,6 +99,17 @@ class TestPurchase(TransactionCase):
         self.assertTrue(journal_entry, "Where's my journal?")
         return self.journal_entries.browse(cr, uid, journal_entry[-1])
 
+    @staticmethod
+    def _get_journal_total(price, qty):
+        return round(price * qty, 2)
+
+    def _test_journal_assertions(self, actual, expected, actual_totals, expected_total, test_args):
+        self.assertEqual(actual, expected,
+                         'Test Args: %s' % str(test_args))
+        for total in actual_totals:
+            self.assertAlmostEqual(total, expected_total, delta=0.001,
+                                    msg='Test Args: %s' % str(test_args))
+
     def _01_receive(self, purchase_id, journal_total, test_args):
         cr, uid = self.cr, self.uid
 
@@ -100,11 +118,15 @@ class TestPurchase(TransactionCase):
         self.rcv_goods.do_partial(cr, uid, [picking.id], partial_data, {})
         journal_entry = self._get_journal_entry(picking)
         self.assertEqual(len(journal_entry.line_id), 2)
-        expected_moves = set([(self.stock_input_account, 0.0, journal_total),
-                              (self.stock_account, journal_total, 0.0)])
-        actual_moves = set([(int(line.account_id.id), line.debit, line.credit) for line
-                    in journal_entry.line_id])
-        self.assertEqual(actual_moves, expected_moves, 'Test Args: %s' % str(test_args))
+        expected_moves = set([(self.stock_input_account, 'cr'),
+                              (self.stock_account, 'dr')])
+        actual_moves = set()
+        actual_totals = []
+        for line in journal_entry.line_id:
+            actual_moves.add((int(line.account_id.id), line.debit and 'dr' or 'cr'))
+            actual_totals.append(line.debit or line.credit)
+        self._test_journal_assertions(actual_moves, expected_moves, actual_totals, journal_total, test_args)
+
 
     def _01_invoice(self, purchase_id, journal_total, test_args, from_picking=False):
         cr, uid = self.cr, self.uid
@@ -119,15 +141,19 @@ class TestPurchase(TransactionCase):
         self.validate(uid, 'account.invoice', invoice_ids[0], 'invoice_open',
                                 cr)
         journal_entry = self.inv_obj.browse(cr, uid, invoice_ids[0]).move_id
-        # There may be taxes so we ignore these
-        expected_moves = set([(self.payables_account, 0.0, journal_total),
-                              (self.stock_input_account, journal_total, 0.0)])
-        actual_moves = set([(int(line.account_id.id), line.debit, line.credit) for line
-                             in journal_entry.line_id])
-        self.assertEqual(actual_moves, expected_moves, 'Test Args: %s' % str(test_args))
+        expected_moves = set([(self.payables_account, 'cr'),
+                              (self.stock_input_account, 'dr')])
+        actual_moves = set()
+        actual_totals = []
+        for line in journal_entry.line_id:
+            actual_moves.add(
+                (int(line.account_id.id), line.debit and 'dr' or 'cr'))
+            actual_totals.append(line.debit or line.credit)
+        self._test_journal_assertions(actual_moves, expected_moves,
+                                      actual_totals, journal_total, test_args)
 
-    @given(st.floats(min_value=0, max_value=1000000.0, allow_nan=False, allow_infinity=False),
-           st.integers(min_value=1, max_value=1000000))
+    @given(st.floats(**PRICE_ARGS), st.integers(**QTY_ARGS))
+    @settings(max_examples=MAX_EXAMPLES)
     def test_01a_receive_po_for_consu_line_order_method(self, price, qty):
         """
         We test that receiving goods from a PO for a consumable item and
@@ -138,11 +164,11 @@ class TestPurchase(TransactionCase):
         :return:
         """
         price, qty = round(price, 2), float(qty)
-        journal_total = round(price * qty, 2)
+        journal_total = self._get_journal_total(price, qty)
         line_vals = [{
             'product_id': self.ref(
                 'test_account_anglo_saxon.product_product_tas_1'),
-            'name': 'Test Line1',
+            'name': 'Test Line 1a',
             'price_unit': price,
             'product_qty': qty,
             'date_planned': self.today
@@ -151,9 +177,8 @@ class TestPurchase(TransactionCase):
         self._01_receive(purchase_id, journal_total, (price, qty))
         self._01_invoice(purchase_id, journal_total, (price, qty))
 
-    @given(st.floats(min_value=0, max_value=1000000.0, allow_nan=False,
-                     allow_infinity=False),
-           st.integers(min_value=1, max_value=1000000))
+    @given(st.floats(**PRICE_ARGS), st.integers(**QTY_ARGS))
+    @settings(max_examples=MAX_EXAMPLES)
     def test_01b_receive_po_for_stock_line_picking_method(self, price, qty):
         """
         We test that receiving goods from a PO for a stock item and
@@ -164,11 +189,11 @@ class TestPurchase(TransactionCase):
         :return:
         """
         price, qty = round(price, 2), float(qty)
-        journal_total = round(price * qty, 2)
+        journal_total = self._get_journal_total(price, qty)
         line_vals = [{
             'product_id': self.ref(
                 'test_account_anglo_saxon.product_product_tas_2'),
-            'name': 'Test Line2',
+            'name': 'Test Line 1b',
             'price_unit': price,
             'product_qty': qty,
             'date_planned': self.today
@@ -177,9 +202,8 @@ class TestPurchase(TransactionCase):
         self._01_receive(purchase_id, journal_total, (price, qty))
         self._01_invoice(purchase_id, journal_total, (price, qty), 'picking')
 
-    @given(st.floats(min_value=0, max_value=1000000.0, allow_nan=False,
-                     allow_infinity=False),
-           st.integers(min_value=1, max_value=1000000))
+    @given(st.floats(**PRICE_ARGS), st.integers(**QTY_ARGS))
+    @settings(max_examples=MAX_EXAMPLES)
     def test_03_create_invoice_receive_goods(self, price, qty):
         """
         We test that invoicing goods from a PO for a stock item and
@@ -190,11 +214,11 @@ class TestPurchase(TransactionCase):
         :return:
         """
         price, qty = round(price, 2), float(qty)
-        journal_total = round(price * qty, 2)
+        journal_total = self._get_journal_total(price, qty)
         line_vals = [{
             'product_id': self.ref(
                 'test_account_anglo_saxon.product_product_tas_1'),
-            'name': 'Test Line1',
+            'name': 'Test Line 3',
             'price_unit': price,
             'product_qty': qty,
             'date_planned': self.today
@@ -203,8 +227,29 @@ class TestPurchase(TransactionCase):
         self._01_invoice(purchase_id, journal_total, (price, qty))
         self._01_receive(purchase_id, journal_total, (price, qty))
 
+    def _04_invoice(self, purchase_id, journal_total, test_args):
+        cr, uid = self.cr, self.uid
+        invoice_ids = [i.id for i in
+                       self.purch_obj.browse(cr, uid, purchase_id).invoice_ids]
+        self.assertTrue(len(invoice_ids) == 1)
+        self.validate(uid, 'account.invoice', invoice_ids[0], 'invoice_open',
+                      cr)
+        journal_entry = self.inv_obj.browse(cr, uid, invoice_ids[0]).move_id
+        expected_moves = set(
+            [(self.payables_account, 'cr'), (self.expense_account, 'dr')])
+        actual_moves = set()
+        actual_totals = []
+        for line in journal_entry.line_id:
+            actual_moves.add(
+                (int(line.account_id.id), line.debit and 'dr' or 'cr'))
+            actual_totals.append(line.debit or line.credit)
+        self._test_journal_assertions(actual_moves, expected_moves,
+                                      actual_totals, journal_total, test_args)
 
-    def test_04a_po_for_service_line_order(self):
+
+    @given(st.floats(**PRICE_ARGS), st.integers(**QTY_ARGS))
+    @settings(max_examples=MAX_EXAMPLES)
+    def test_04a_po_for_service_line_order(self, price, qty):
         """
         We test that invoicing goods from a PO for a service item
         creates expected journal entries when invoice method is order
@@ -212,9 +257,24 @@ class TestPurchase(TransactionCase):
         :param qty:
         :return:
         """
-        pass
+        cr, uid = self.cr, self.uid
+        price, qty = round(price, 2), float(qty)
+        journal_total = self._get_journal_total(price, qty)
+        line_vals = [{
+            'product_id': self.ref(
+                'test_account_anglo_saxon.product_product_tas_3'),
+            'name': 'Test Line 4a',
+            'price_unit': price,
+            'product_qty': qty,
+            'date_planned': self.today}]
+        purchase_id = self._create_and_confirm_purchase(line_vals)
+        picking_id = self.rcv_goods.search(cr, uid,
+                                           [('purchase_id', '=', purchase_id)])
+        self.assertFalse(picking_id, "A picking was created")
+        self._04_invoice(purchase_id, journal_total, (price, qty))
 
-    def test_04a_po_for_service_line_picking_method(self):
+
+    def test_04b_po_for_service_line_picking_method(self):
         """
         We test that invoicing goods from a PO for a service item and
         creates expected journal entries when invoice method is picking
