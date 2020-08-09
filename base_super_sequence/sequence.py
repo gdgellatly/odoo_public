@@ -39,10 +39,3 @@ class SuperSequence(orm.Model):
     _defaults = {'%s_increment' % f: 0 for f in
                  ('sale, out, in, mrp, purchase, '
                   'out_invoice, out_refund, in_invoice, in_refund')}
-
-
-class LinkedDocument(orm.Model):
-    """Linked Document"""
-    _name = 'linked.document'
-
-    _columns =
